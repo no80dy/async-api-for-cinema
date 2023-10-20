@@ -26,7 +26,6 @@ class Film(BaseModel):
     summary="Поиск кинопроизведений",
     description="Полнотекстовый поиск по кинопроизведениям",
     response_description="Название и рейтинг фильма",
-    tags=['Полнотекстовый поиск'],
 )
 async def film_details(film_id: str, film_service: FilmService = Depends(get_film_service)) -> Film:
     film = await film_service.get_by_id(film_id)
