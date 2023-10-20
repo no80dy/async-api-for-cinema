@@ -15,7 +15,6 @@ services:
 
   redis:
     image: docker.io/bitnami/redis:7.2.1
-    container_name: redis
     environment:
       - ALLOW_EMPTY_PASSWORD=yes  # для прода данный параметр удалить
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
@@ -35,8 +34,6 @@ services:
 
   elastic:
     image: elasticsearch:8.6.2
-    ports:
-      - "9200:9200"
     environment:
       - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
       - "discovery.type=single-node"
