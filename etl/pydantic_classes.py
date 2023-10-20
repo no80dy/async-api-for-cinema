@@ -9,7 +9,7 @@ from pydantic_settings import BaseSettings, SettingsConfigDict
 class Settings(BaseSettings):
     PG_DB_NAME: str
     PG_DB_USER: str
-    PG_DB_PASSWORD: int
+    PG_DB_PASSWORD: str
     PG_DB_HOST: Optional[str] = '127.0.0.1'
     PG_DB_PORT: int
 
