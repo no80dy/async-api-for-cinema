@@ -17,8 +17,6 @@ def datetime_now() -> datetime:
 
 class BaseModelOrjson(BaseModel):
     id: str = Field(..., alias='uuid')
-    created_at: datetime = Field(default_factory=datetime_now)
-    updated_at: datetime = Field(default_factory=datetime_now)
     class Config:
         json_loads = orjson.loads
         json_dumps = orjson_dumps
@@ -27,7 +25,7 @@ class BaseModelOrjson(BaseModel):
 
 class IdName(BaseModel):
     id: str
-    name: str
+    full_name: str
 
 
 class TypeChoices(str, Enum):
@@ -36,37 +34,54 @@ class TypeChoices(str, Enum):
 
 
 class FilmShort(BaseModelOrjson):
+    """
+    Схемы ответов для:
+    /api/v1/films
+    /api/v1/films/search/
+    /api/v1/persons/<uuid:UUID>/film/
+    """
     title: str
-    description: str
+    imdb_rating: Optional[float]
 
-
-class Film(BaseModelOrjson):
-    rating: Optional[float]
-    title: str
-    description: Optional[str]
-    creation_date: Optional[datetime]
-    type: TypeChoices
-    # аннотированные поля
-    actors: List[IdName]
-    writers: List[IdName]
-    directors: List[IdName]
-    genres: List[IdName]
-
-    @validator('rating')
+    @validator('imdb_rating')
     def check_rating(cls, rating):
         if rating > 100 or rating < 0:
             raise ValueError('Ошибка валидации рейтинга')
         return rating
 
 
-class Genre(BaseModelOrjson):
+class Genres(BaseModelOrjson):
+    """
+    Схемы ответов для:
+    /api/v1/genres/
+    /api/v1/genres/<uuid:UUID>/
+    """
     name: str
-    description: str
-    films: List[FilmShort]
 
 
-class Person(BaseModelOrjson):
+class PersonRoles(BaseModelOrjson):
+    roles: Optional[List[str]]
+
+
+class Persons(BaseModelOrjson):
+    """
+    Схемы ответов для:
+    /api/v1/persons/search/
+    /api/v1/persons/<uuid:UUID>/
+    """
     full_name: str
-    # ниже данные из таблицы PersonFilmWork
-    roles: List[str]
-    film_ids: List[str]
+    films: Optional[List[PersonRoles]]
+
+
+class Film(FilmShort):
+    """
+    Схемы ответов для:
+    /api/v1/films/<uuid:UUID>/
+    """
+    title: str
+    imdb_rating: Optional[float]
+    description: Optional[str]
+    genres: List[Genres]
+    actors: List[IdName]
+    writers: List[IdName]
+    directors: List[IdName]
