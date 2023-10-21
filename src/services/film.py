@@ -41,13 +41,79 @@ class FilmService:
             return []
         return films
 
+    async def get_films_with_sort(
+        self,
+        sort: str,
+        page_size: int,
+        page_number: int
+    ) -> List[Film]:
+        films = await self._get_films_with_sort_from_elastic(
+            sort, page_size, page_number
+        )
+
+        if not films:
+            return []
+        return films
+
+    async def get_ilms_by_genre_id_with_sort(
+        self,
+        genre_id: str,
+        sort: str,
+        page_size: int,
+        page_number: int
+    ) -> List[Film]:
+        films = await self._get_films_by_genre_id_with_sort_from_elastic(
+            genre_id, sort, page_size, page_number
+        )
+
+        if not films:
+            return []
+        return films
+
+    async def _get_films_by_genre_id_with_sort_from_elastic(
+        self,
+        genre_id: str,
+        sort: str,
+        page_size: int,
+        page_number: int
+    ) -> List[Film]:
+        elastic_query = {
+            'query': {
+                'nested': {
+                    'path': 'genres',
+                    'query': {
+                        'match': {
+                            'genres.id': genre_id
+                        }
+                    }
+                }
+            },
+            'sort': [
+                {
+                    self._get_sort_field(sort): {
+                        'order': self._get_sort_order(sort)
+                    }
+                }
+            ],
+            'size': page_size,
+            'from': self._calculate_offset(page_size, page_number)
+        }
+
+        try:
+            docs = await self.elastic.search(
+                index='movies', body=elastic_query
+            )
+        except NotFoundError:
+            return []
+        return [Film(**doc['_source']) for doc in docs['hits']['hits']]
+
     async def _get_films_by_query_from_elastic(
         self,
         query: str,
         page_size: int,
         page_number: int
     ) -> List[Film]:
-        search_query = {
+        elastic_query = {
             'query': {
                 'fuzzy': {
                     'title': {
@@ -61,7 +127,35 @@ class FilmService:
         }
 
         try:
-            docs = await self.elastic.search(index='movies', body=search_query)
+            docs = await self.elastic.search(
+                index='movies', body=elastic_query
+            )
+        except NotFoundError:
+            return []
+        return [Film(**doc['_source']) for doc in docs['hits']['hits']]
+
+    async def _get_films_with_sort_from_elastic(
+        self,
+        sort: str,
+        page_size: int,
+        page_number: int
+    ) -> List[Film]:
+        elastic_query = {
+            'sort': [
+                {
+                    self._get_sort_field(sort): {
+                        'order': self._get_sort_order(sort)
+                    }
+                }
+            ],
+            'size': page_size,
+            'from': self._calculate_offset(page_size, page_number)
+        }
+
+        try:
+            docs = await self.elastic.search(
+                index='movies', body=elastic_query
+            )
         except NotFoundError:
             return []
         return [Film(**doc['_source']) for doc in docs['hits']['hits']]
@@ -82,10 +176,18 @@ class FilmService:
         return film
 
     async def _put_film_to_cache(self, film: Film):
-        await self.redis.set(film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(
+            film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS
+        )
 
-    def _calculate_offset(page_size: int, page_number: int) -> int:
+    def _calculate_offset(self, page_size: int, page_number: int) -> int:
         return (page_number - 1) * page_size
+
+    def _get_sort_field(self, sort: str) -> str:
+        return sort[1:] if sort.startswith('-') else sort
+
+    def _get_sort_order(self, sort: str) -> str:
+        return 'desc' if sort.startswith('-') else 'asc'
 
 
 @lru_cache()
