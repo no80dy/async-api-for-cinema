@@ -55,7 +55,7 @@ class FilmService:
             return []
         return films
 
-    async def get_ilms_by_genre_id_with_sort(
+    async def get_films_by_genre_id_with_sort(
         self,
         genre_id: str,
         sort: str,
