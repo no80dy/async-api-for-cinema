@@ -13,9 +13,9 @@ router = APIRouter()
 @router.get(
     '/search',
     response_model=List[FilmShort],
-    summary="Поиск кинопроизведений",
-    description="Полнотекстовый поиск по кинопроизведениям",
-    response_description="Название и рейтинг филкинопроизведения",
+    summary='Поиск кинопроизведений',
+    description='Выполняет полнотекстовый поиск кинопроизведений',
+    response_description='Список кинопроизведений с названием и рейтингом',
 )
 async def search_film(
     query: str,
@@ -41,9 +41,9 @@ async def search_film(
 @router.get(
     '/{film_id}',
     response_model=FilmShort,
-    summary="Поиск кинопроизведений",
-    description="Полнотекстовый поиск по кинопроизведениям",
-    response_description="Название и рейтинг фильма",
+    summary='Полная информация по кинопроизведению',
+    description='Получение полной информации о кинопроизведении по его идентификатору',
+    response_description='Полная информация о кинопроизведении',
 )
 async def film_details(
     film_id: str,
@@ -63,9 +63,9 @@ async def film_details(
 @router.get(
     '/',
     response_model=List[FilmShort],
-    summary="Поиск кинопроизведений",
-    description="Полнотекстовый поиск по кинопроизведениям",
-    response_description="Название и рейтинг фильма",
+    summary='Список отсортированных кинопроизведений',
+    description='Выполняет поиск кинопроизведений с опциональной фильтрацией по жанру и сортировкой',
+    response_description='Список кинопроизведений с названием и рейтингом',
 )
 async def films(
     genre_id: Optional[UUID] = None,
