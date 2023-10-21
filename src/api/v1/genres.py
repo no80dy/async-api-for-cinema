@@ -15,8 +15,8 @@ router = APIRouter()
     '/{genre_id}',
     response_model=Genres,
     summary='Информация по жанру',
-    description='Данный эндпоинт выводит данные по конкретному жанру',
-    response_description='Подробная информация по жанру'
+    description='Получение подробной информации о конкретном жанре',
+    response_description='Информация по жанру'
 )
 async def genre_details(
     genre_id: UUID,
@@ -36,7 +36,7 @@ async def genre_details(
     '/',
     response_model=List[Genres],
     summary='Список всех жанров',
-    description='Данный эндпоинт выводит список всех жанров',
+    description='Возвращает список всех доступных жанров',
     response_description='Список жанров'
 )
 async def genres(
