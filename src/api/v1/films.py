@@ -75,7 +75,7 @@ async def films(
     film_service: FilmService = Depends(get_film_service)
 ) -> List[FilmShort]:
     if genre_id:
-        films = await film_service.get_ilms_by_genre_id_with_sort(
+        films = await film_service.get_films_by_genre_id_with_sort(
             genre_id, sort, page_size, page_number
         )
     else:
