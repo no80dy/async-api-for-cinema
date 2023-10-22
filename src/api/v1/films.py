@@ -39,6 +39,34 @@ async def search_film(
 
 
 @router.get(
+    '/search',
+    response_model=List[FilmShort],
+    summary='Поиск кинопроизведений',
+    description='Выполняет полнотекстовый поиск кинопроизведений',
+    response_description='Список кинопроизведений с названием и рейтингом',
+)
+async def search_film(
+    query: str,
+    page_size: int = Query(..., ge=1),
+    page_number: int = Query(..., ge=1),
+    film_service: FilmService = Depends(get_film_service)
+) -> List[FilmShort]:
+    films = await film_service.get_films_by_query(
+        query, page_size, page_number
+    )
+
+    if not films:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='films not found'
+        )
+
+    return [
+        FilmShort(id=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in films
+    ]
+
+
+@router.get(
     '/{film_id}',
     response_model=Film,
     summary='Полная информация по кинопроизведению',
