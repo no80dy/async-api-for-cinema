@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException
 from uuid import UUID
 
 from services.genre import GenreService, get_genre_service
-from models.film import Genres
+from models.genre import Genres
 
 
 router = APIRouter()

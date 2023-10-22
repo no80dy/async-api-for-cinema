@@ -7,7 +7,7 @@ from redis.asyncio import Redis
 
 from db.elastic import get_elastic
 from db.redis import get_redis
-from models.film import Genres
+from models.genre import Genres
 
 
 class GenreService:
