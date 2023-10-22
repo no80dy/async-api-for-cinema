@@ -4,7 +4,7 @@ from http import HTTPStatus
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from services.film import FilmService, get_film_service
-from models.film import FilmShort
+from models.film import Film, FilmShort
 
 
 router = APIRouter()
@@ -40,7 +40,7 @@ async def search_film(
 
 @router.get(
     '/{film_id}',
-    response_model=FilmShort,
+    response_model=Film,
     summary='Полная информация по кинопроизведению',
     description='Получение полной информации о кинопроизведении по его идентификатору',
     response_description='Полная информация о кинопроизведении',
@@ -48,16 +48,14 @@ async def search_film(
 async def film_details(
     film_id: str,
     film_service: FilmService = Depends(get_film_service)
-) -> FilmShort:
+) -> Film:
     film = await film_service.get_film_by_id(str(film_id))
 
     if not film:
         raise HTTPException(
             status_code=HTTPStatus.NOT_FOUND, detail='film not found'
         )
-    return FilmShort(
-        id=film.id, title=film.title, imdb_rating=film.imdb_rating
-    )
+    return film
 
 
 @router.get(
