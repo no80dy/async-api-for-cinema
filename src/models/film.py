@@ -1,20 +1,14 @@
 from typing import Optional, List
 
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator, Field
 
+from models.base import BaseModelOrjson
 from models.genre import Genres
-
-
-class BaseModelOrjson(BaseModel):
-    id: str = Field(..., alias='uuid')
-
-    class Config:
-        allow_population_by_field_name = True
 
 
 class IdName(BaseModel):
     id: str
-    full_name: str
+    full_name: str = Field(..., validation_alias='name')
 
 
 class FilmShort(BaseModelOrjson):

@@ -1,4 +1,4 @@
-from models.film import BaseModelOrjson
+from models.base import BaseModelOrjson
 
 
 class Genres(BaseModelOrjson):

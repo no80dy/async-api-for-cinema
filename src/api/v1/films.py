@@ -1,6 +1,9 @@
 from uuid import UUID
 from typing import List, Optional
+from uuid import UUID
+from typing import List, Optional
 from http import HTTPStatus
+from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from services.film import FilmService, get_film_service
