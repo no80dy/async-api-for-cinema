@@ -22,7 +22,7 @@ async def genre_details(
     genre_id: UUID,
     genre_service: GenreService = Depends(get_genre_service)
 ) -> Genres:
-    genre = await genre_service.get_genre_by_id(str(genre_id))
+    genre = await genre_service.get_genre_by_id(genre_id)
 
     if not genre:
         raise HTTPException(

@@ -1,3 +1,4 @@
+from uuid import UUID
 from functools import lru_cache
 from typing import Optional, List
 
@@ -21,7 +22,7 @@ class GenreService:
 
     async def get_genre_by_id(
         self,
-        genre_id: str
+        genre_id: UUID
     ) -> Optional[Genres]:
         genre = await self._get_genre_by_id_from_elastic(genre_id)
 
@@ -51,7 +52,7 @@ class GenreService:
 
     async def _get_genre_by_id_from_elastic(
         self,
-        genre_id: str
+        genre_id: UUID
     ) -> Optional[Genres]:
         try:
             doc = await self.elastic.get(index='genres', id=genre_id)
