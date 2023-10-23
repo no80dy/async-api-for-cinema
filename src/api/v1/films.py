@@ -1,9 +1,6 @@
 from uuid import UUID
 from typing import List, Optional
-from uuid import UUID
-from typing import List, Optional
 from http import HTTPStatus
-from fastapi import APIRouter, Depends, HTTPException, Query
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from services.film import FilmService, get_film_service
@@ -11,6 +8,34 @@ from models.film import Film, FilmShort
 
 
 router = APIRouter()
+
+
+@router.get(
+    '/search',
+    response_model=List[FilmShort],
+    summary='Поиск кинопроизведений',
+    description='Выполняет полнотекстовый поиск кинопроизведений',
+    response_description='Список кинопроизведений с названием и рейтингом',
+)
+async def search_film(
+    query: str,
+    page_size: int = Query(..., ge=1),
+    page_number: int = Query(..., ge=1),
+    film_service: FilmService = Depends(get_film_service)
+) -> List[FilmShort]:
+    films = await film_service.get_films_by_query(
+        query, page_size, page_number
+    )
+
+    if not films:
+        raise HTTPException(
+            status_code=HTTPStatus.NOT_FOUND, detail='films not found'
+        )
+
+    return [
+        FilmShort(id=film.id, title=film.title, imdb_rating=film.imdb_rating)
+        for film in films
+    ]
 
 
 @router.get(
