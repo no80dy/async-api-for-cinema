@@ -1,10 +1,10 @@
 import uvicorn
 from elasticsearch import AsyncElasticsearch
 from fastapi import FastAPI
-from fastapi.responses import ORJSONResponse
+from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
-from api.v1 import films
+from api.v1 import films, genres
 from core import config
 from db import elastic, redis
 
@@ -19,7 +19,7 @@ app = FastAPI(
     openapi_url='/api/openapi.json',
     # Можно сразу сделать небольшую оптимизацию сервиса 
     # и заменить стандартный JSON-сереализатор на более шуструю версию, написанную на Rust
-    default_response_class=ORJSONResponse,
+    default_response_class=JSONResponse,
 )
 
 
@@ -42,6 +42,7 @@ async def shutdown():
 # Подключаем роутер к серверу, указав префикс /v1/films
 # Теги указываем для удобства навигации по документации
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
+app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
 
 
 if __name__ == '__main__':
