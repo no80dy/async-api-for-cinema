@@ -1,13 +1,13 @@
 from typing import Optional, List
 
-from models.film import BaseModelOrjson
+from models.film import BaseProjectModel
 
 
-class PersonRoles(BaseModelOrjson):
+class PersonRoles(BaseProjectModel):
     roles: Optional[List[str]]
 
 
-class Persons(BaseModelOrjson):
+class Persons(BaseProjectModel):
     """
     Схемы ответов для:
     /api/v1/persons/search/
