@@ -2,7 +2,7 @@ from typing import Optional, List
 
 from pydantic import BaseModel, validator, Field
 
-from models.base import BaseModelOrjson
+from models.base import BaseProjectModel
 from models.genre import Genres
 
 
@@ -11,7 +11,7 @@ class IdName(BaseModel):
     full_name: str = Field(..., validation_alias='name')
 
 
-class FilmShort(BaseModelOrjson):
+class FilmShort(BaseProjectModel):
     """
     Схемы ответов для:
     /api/v1/films

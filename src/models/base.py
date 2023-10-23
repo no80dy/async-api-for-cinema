@@ -1,7 +1,7 @@
 from pydantic import BaseModel, Field
 
 
-class BaseModelOrjson(BaseModel):
+class BaseProjectModel(BaseModel):
     id: str = Field(..., serialization_alias='uuid')
 
     class Config:
