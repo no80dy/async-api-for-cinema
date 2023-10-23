@@ -1,3 +1,4 @@
+import uuid
 from typing import Optional, List
 
 from pydantic import BaseModel, validator, Field
@@ -7,7 +8,7 @@ from models.genre import Genres
 
 
 class IdName(BaseModel):
-    id: str
+    id: uuid.UUID
     full_name: str = Field(..., validation_alias='name')
 
 
