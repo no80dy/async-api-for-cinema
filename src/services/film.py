@@ -1,3 +1,4 @@
+import uuid
 from uuid import UUID
 from functools import lru_cache
 from typing import Optional, List
@@ -19,9 +20,15 @@ class FilmService:
         self.elastic = elastic
 
     async def get_film_by_id(self, film_id: UUID) -> Optional[Film]:
-        film = await self._get_film_from_elastic(film_id)
+        film = await self._film_from_cache(film_id)
         if not film:
-            return None
+            # Если фильма нет в кеше, то ищем его в Elasticsearch
+            film = await self._get_film_from_elastic(film_id)
+            if not film:
+                # Если он отсутствует в Elasticsearch, значит, фильма вообще нет в базе
+                return None
+            # Сохраняем фильм  в кеш
+            await self._put_film_to_cache(film)
 
         return film
 
@@ -158,15 +165,15 @@ class FilmService:
             return []
         return [Film(**doc['_source']) for doc in docs['hits']['hits']]
 
-    async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
+    async def _get_film_from_elastic(self, film_id: uuid.UUID) -> Optional[Film]:
         try:
             doc = await self.elastic.get(index='movies', id=film_id)
         except NotFoundError:
             return None
         return Film(**doc['_source'])
 
-    async def _film_from_cache(self, film_id: str) -> Optional[Film]:
-        data = await self.redis.get(film_id)
+    async def _film_from_cache(self, film_id: uuid.UUID) -> Optional[Film]:
+        data = await self.redis.get(str(film_id))
         if not data:
             return None
 
@@ -175,7 +182,7 @@ class FilmService:
 
     async def _put_film_to_cache(self, film: Film):
         await self.redis.set(
-            film.id, film.json(), FILM_CACHE_EXPIRE_IN_SECONDS
+            str(film.id), film.json(), FILM_CACHE_EXPIRE_IN_SECONDS
         )
 
     def _calculate_offset(self, page_size: int, page_number: int) -> int:

@@ -9,7 +9,7 @@ from models.genre import Genres
 
 class IdName(BaseModel):
     id: uuid.UUID
-    full_name: str = Field(..., validation_alias='name')
+    name: str = Field(..., alias='full_name')
 
 
 class FilmShort(BaseProjectModel):
@@ -37,7 +37,7 @@ class Film(FilmShort):
     title: str
     imdb_rating: Optional[float]
     description: Optional[str]
-    genres: List[Genres]
-    actors: List[Optional[IdName]]
-    writers: List[Optional[IdName]]
-    directors: List[Optional[IdName]]
+    genres: Optional[List[Genres]]
+    actors: Optional[List[IdName]]
+    writers: Optional[List[IdName]]
+    directors: Optional[List[IdName]]

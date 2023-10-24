@@ -38,6 +38,8 @@ services:
       - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"  # для прода данный параметр удалить
+    ports:
+      - "9200:9200"
 
   fastapi:
     build: ./src
