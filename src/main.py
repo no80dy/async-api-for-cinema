@@ -4,9 +4,11 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 from redis.asyncio import Redis
 
-from api.v1 import films, persons
+from api.v1 import films, genres, persons
+from api.v1 import films, genres
 from core import config
 from db import elastic, redis
+
 
 app = FastAPI(
     description="Информация о фильмах, жанрах и людях, участвовавших в создании произведения",
@@ -44,6 +46,7 @@ async def shutdown():
 # Теги указываем для удобства навигации по документации
 app.include_router(films.router, prefix='/api/v1/films', tags=['films'])
 app.include_router(persons.router, prefix='/api/v1/persons', tags=['persons'])
+app.include_router(genres.router, prefix='/api/v1/genres', tags=['genres'])
 
 
 if __name__ == '__main__':
