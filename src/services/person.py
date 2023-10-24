@@ -15,13 +15,13 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
 
 class PersonService:
-    """Класс PersonService содержит бизнес-логику по работе с фильмами."""
+    """Класс PersonService содержит бизнес-логику по работе с персонами."""
 
     def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
         self.redis = redis
         self.elastic = elastic
 
-    async def get_by_id(self, person_id: uuid.UUID) -> Optional[Person]:
+    async def get_person_by_id(self, person_id: uuid.UUID) -> Optional[Person]:
         """Функция возвращает объект персоны. Он опционален, так как персона может отсутствовать в базе."""
         person = await self._person_from_cache(person_id)
         if not person:
@@ -52,11 +52,56 @@ class PersonService:
         """Сохраняем данные о персоне в кеше, время жизни кеша — 5 минут."""
         await self.redis.set(person.id, person.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
+    async def get_persons_by_query(self,
+                                   query: str,
+                                   page_size: int,
+                                   page_number: int
+                                   ) -> Optional[list[Person]]:
+        """Функция возвращает список персон на основании запроса."""
+        persons = await self._get_persons_by_query_from_elastic(
+            query, page_size, page_number
+        )
+
+        if not persons:
+            return []
+        return persons
+
+    async def _get_persons_by_query_from_elastic(self,
+                                                 query: str,
+                                                 page_size: int,
+                                                 page_number: int
+                                                 ) -> Optional[list[Person]]:
+        elastic_query = {
+            'query': {
+                'fuzzy': {
+                    'full_name': {
+                        'value': query,
+                        'fuzziness': 'AUTO'
+                    }
+                }
+            },
+            'size': page_size,
+            'from': self._calculate_offset(page_size, page_number)
+        }
+
+        try:
+            docs = await self.elastic.search(
+                index='persons', body=elastic_query
+            )
+        except NotFoundError:
+            return []
+        return [Person(**doc['_source']) for doc in docs['hits']['hits']]
+
+    def _calculate_offset(self, page_size: int, page_number: int) -> int:
+        return (page_number - 1) * page_size
+
 
 # get_person_service — это провайдер PersonService.
 # С помощью Depends он сообщает, что ему необходимы Redis и Elasticsearch
 # Для их получения вы ранее создали функции-провайдеры в модуле db
 # Используем lru_cache-декоратор, чтобы создать объект сервиса в едином экземпляре (синглтона)
+
+
 @lru_cache()
 def get_person_service(
         redis: Redis = Depends(get_redis),
