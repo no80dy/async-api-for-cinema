@@ -30,7 +30,7 @@ class FilmService:
                 # Если он отсутствует в Elasticsearch, значит, фильма вообще нет в базе
                 return None
             # Сохраняем фильм  в кеш
-            await self._put_film_to_cache(film.json(), str(film.id))
+            await self._put_film_to_cache(film.json(), str(film_id))
 
         return film
 
@@ -48,8 +48,8 @@ class FilmService:
             )
             if not films:
                 return []
-        value = json.dumps([film.json() for film in films])
-        await self._put_film_to_cache(value, key)
+            value = json.dumps([film.json() for film in films])
+            await self._put_film_to_cache(value, key)
 
         return films
 
@@ -67,8 +67,8 @@ class FilmService:
             )
             if not films:
                 return []
-        value = json.dumps([film.json() for film in films])
-        await self._put_film_to_cache(value, key)
+            value = json.dumps([film.json() for film in films])
+            await self._put_film_to_cache(value, key)
 
         return films
 
@@ -87,8 +87,8 @@ class FilmService:
             )
             if not films:
                 return []
-        value = json.dumps([film.json() for film in films])
-        await self._put_film_to_cache(value, key)
+            value = json.dumps([film.json() for film in films])
+            await self._put_film_to_cache(value, key)
 
         return films
 
@@ -105,8 +105,8 @@ class FilmService:
             person_films = await self._get_films_by_ids_from_elastic(film_ids)
             if not person_films:
                 return []
-        value = json.dumps([film.json() for film in person_films])
-        await self._put_film_to_cache(value, key)
+            value = json.dumps([film.json() for film in person_films])
+            await self._put_film_to_cache(value, key)
 
         return person_films
 
