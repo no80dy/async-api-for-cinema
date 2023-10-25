@@ -37,7 +37,7 @@ class Film(FilmShort):
     title: str
     imdb_rating: Optional[float]
     description: Optional[str]
-    genres: Optional[List[Genres]]
+    genres: List[Genres]
     actors: Optional[List[IdName]]
     writers: Optional[List[IdName]]
     directors: Optional[List[IdName]]
