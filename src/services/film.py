@@ -9,6 +9,7 @@ from redis.asyncio import Redis
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.film import Film
+from models.person import Person
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -156,6 +157,42 @@ class FilmService:
             )
         except NotFoundError:
             return []
+        return [Film(**doc['_source']) for doc in docs['hits']['hits']]
+
+    async def get_person_films(
+        self,
+        person: Person,
+    ) -> List[Film]:
+
+        film_ids = [str(film.id) for film in person.films]
+
+        person_films = await self._get_films_by_ids_from_elastic(film_ids)
+
+        if not person_films:
+            return []
+        return person_films
+
+    async def _get_films_by_ids_from_elastic(
+            self,
+            film_ids: list[str],
+    ) -> List[Film]:
+
+        elastic_query = {
+            'query': {
+                'ids': {
+                    'values': film_ids
+                }
+            }
+        }
+
+        try:
+            docs = await self.elastic.search(
+                index='movies', body=elastic_query
+            )
+        except NotFoundError:
+            return []
+
+        print(docs)
         return [Film(**doc['_source']) for doc in docs['hits']['hits']]
 
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:

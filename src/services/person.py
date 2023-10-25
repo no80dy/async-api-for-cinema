@@ -45,12 +45,12 @@ class PersonService:
             return None
 
         # pydantic предоставляет удобное API для создания объекта моделей из json
-        person = Person.model_validate_strings(data)
+        person = Person.model_validate_json(data)
         return person
 
     async def _put_person_to_cache(self, person: Person):
         """Сохраняем данные о персоне в кеше, время жизни кеша — 5 минут."""
-        await self.redis.set(person.id, person.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.redis.set(str(person.id), person.model_dump_json(), FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def get_persons_by_query(self,
                                    query: str,
@@ -94,12 +94,6 @@ class PersonService:
 
     def _calculate_offset(self, page_size: int, page_number: int) -> int:
         return (page_number - 1) * page_size
-
-
-# get_person_service — это провайдер PersonService.
-# С помощью Depends он сообщает, что ему необходимы Redis и Elasticsearch
-# Для их получения вы ранее создали функции-провайдеры в модуле db
-# Используем lru_cache-декоратор, чтобы создать объект сервиса в едином экземпляре (синглтона)
 
 
 @lru_cache()
