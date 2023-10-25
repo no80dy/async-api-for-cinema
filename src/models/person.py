@@ -7,11 +7,7 @@ class PersonRoles(BaseProjectModel):
     roles: Optional[List[str]]
 
 
-class Persons(BaseProjectModel):
-    """
-    Схемы ответов для:
-    /api/v1/persons/search/
-    /api/v1/persons/<uuid:UUID>/
-    """
+class Person(BaseProjectModel):
+    """Внутренняя модель, используется только в рамках бизнес-логики."""
     full_name: str
     films: Optional[List[PersonRoles]]
