@@ -1,7 +1,8 @@
+import json
 import uuid
 from uuid import UUID
 from functools import lru_cache
-from typing import Optional, List
+from typing import Optional, List, Any
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
@@ -21,15 +22,15 @@ class FilmService:
         self.elastic = elastic
 
     async def get_film_by_id(self, film_id: UUID) -> Optional[Film]:
-        film = await self._film_from_cache(film_id)
+        film = await self._film_from_cache(str(film_id))
         if not film:
             # Если фильма нет в кеше, то ищем его в Elasticsearch
-            film = await self._get_film_from_elastic(film_id)
+            film = await self._get_film_from_elastic(str(film_id))
             if not film:
                 # Если он отсутствует в Elasticsearch, значит, фильма вообще нет в базе
                 return None
             # Сохраняем фильм  в кеш
-            await self._put_film_to_cache(film)
+            await self._put_film_to_cache(film.json(), str(film.id))
 
         return film
 
@@ -39,12 +40,17 @@ class FilmService:
         page_size: int,
         page_number: int
     ) -> List[Film]:
-        films = await self._get_films_by_query_from_elastic(
-            query, page_size, page_number
-        )
-
+        key = f'{query}/{page_size}/{page_number}'
+        films = await self._film_from_cache(key)
         if not films:
-            return []
+            films = await self._get_films_by_query_from_elastic(
+                query, page_size, page_number
+            )
+            if not films:
+                return []
+        value = json.dumps([film.json() for film in films])
+        await self._put_film_to_cache(value, key)
+
         return films
 
     async def get_films_with_sort(
@@ -53,12 +59,17 @@ class FilmService:
         page_size: int,
         page_number: int
     ) -> List[Film]:
-        films = await self._get_films_with_sort_from_elastic(
-            sort, page_size, page_number
-        )
-
+        key = f'{sort}/{page_size}/{page_number}'
+        films = await self._film_from_cache(key)
         if not films:
-            return []
+            films = await self._get_films_with_sort_from_elastic(
+                sort, page_size, page_number
+            )
+            if not films:
+                return []
+        value = json.dumps([film.json() for film in films])
+        await self._put_film_to_cache(value, key)
+
         return films
 
     async def get_films_by_genre_id_with_sort(
@@ -68,13 +79,36 @@ class FilmService:
         page_size: int,
         page_number: int
     ) -> List[Film]:
-        films = await self._get_films_by_genre_id_with_sort_from_elastic(
-            genre_id, sort, page_size, page_number
-        )
-
+        key = f'{genre_id}/{sort}/{page_size}/{page_number}'
+        films = await self._film_from_cache(key)
         if not films:
-            return []
+            films = await self._get_films_by_genre_id_with_sort_from_elastic(
+                genre_id, sort, page_size, page_number
+            )
+            if not films:
+                return []
+        value = json.dumps([film.json() for film in films])
+        await self._put_film_to_cache(value, key)
+
         return films
+
+    async def get_person_films(
+        self,
+        person: Person,
+    ) -> List[Film]:
+
+        film_ids = [str(film.id) for film in person.films]
+
+        key = '/'.join(film_ids)
+        person_films = await self._film_from_cache(key)
+        if not person_films:
+            person_films = await self._get_films_by_ids_from_elastic(film_ids)
+            if not person_films:
+                return []
+        value = json.dumps([film.json() for film in person_films])
+        await self._put_film_to_cache(value, key)
+
+        return person_films
 
     async def _get_films_by_genre_id_with_sort_from_elastic(
         self,
@@ -166,19 +200,6 @@ class FilmService:
             return []
         return [Film(**doc['_source']) for doc in docs['hits']['hits']]
 
-    async def get_person_films(
-        self,
-        person: Person,
-    ) -> List[Film]:
-
-        film_ids = [str(film.id) for film in person.films]
-
-        person_films = await self._get_films_by_ids_from_elastic(film_ids)
-
-        if not person_films:
-            return []
-        return person_films
-
     async def _get_films_by_ids_from_elastic(
             self,
             film_ids: list[str],
@@ -199,7 +220,6 @@ class FilmService:
         except NotFoundError:
             return []
 
-        print(docs)
         return [Film(**doc['_source']) for doc in docs['hits']['hits']]
 
     async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
@@ -209,17 +229,18 @@ class FilmService:
             return None
         return Film(**doc['_source'])
 
-    async def _film_from_cache(self, film_id: uuid.UUID) -> Optional[Film]:
-        data = await self.redis.get(str(film_id))
+    async def _film_from_cache(self, key: str) -> None | Film | list[Film]:
+        data = await self.redis.get(key)
         if not data:
             return None
 
-        film = Film.parse_raw(data)
-        return film
+        if '/' not in key:
+            return Film.parse_raw(data)
+        return [Film.parse_raw(obj) for obj in json.loads(data)]
 
-    async def _put_film_to_cache(self, film: Film):
+    async def _put_film_to_cache(self, value: Any, key: str):
         await self.redis.set(
-            str(film.id), film.json(), FILM_CACHE_EXPIRE_IN_SECONDS
+            str(key), value, FILM_CACHE_EXPIRE_IN_SECONDS
         )
 
     def _calculate_offset(self, page_size: int, page_number: int) -> int:
