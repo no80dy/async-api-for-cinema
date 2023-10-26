@@ -4,10 +4,16 @@ from models.film import BaseProjectModel
 
 
 class PersonRoles(BaseProjectModel):
+    """Список ролей, которые персона исполнила в конкретном кинопроизведении"""
     roles: Optional[List[str]]
 
 
 class Person(BaseProjectModel):
-    """Внутренняя модель, используется только в рамках бизнес-логики."""
+    """
+    Модель ответов для:
+    /api/v1/persons/search/
+    /api/v1/persons/<uuid:UUID>/
+    /api/v1/persons/<uuid:UUID>/film/
+    """
     full_name: str
-    films: Optional[List[PersonRoles]]
+    films: list[PersonRoles]
