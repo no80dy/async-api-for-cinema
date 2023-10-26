@@ -1,72 +1,43 @@
-from datetime import datetime, timezone
-from enum import Enum
+import uuid
 from typing import Optional, List
 
-import orjson
-from pydantic import BaseModel, Field, validator
+from pydantic import BaseModel, validator
 
-
-def orjson_dumps(v, *, default):
-    # orjson.dumps возвращает bytes, а pydantic требует unicode, поэтому декодируем
-    return orjson.dumps(v, default=default).decode()
-
-
-def datetime_now() -> datetime:
-    return datetime.now(timezone.utc)
-
-
-class BaseModelOrjson(BaseModel):
-    id: str = Field(..., alias='uuid')
-    created_at: datetime = Field(default_factory=datetime_now)
-    updated_at: datetime = Field(default_factory=datetime_now)
-    class Config:
-        json_loads = orjson.loads
-        json_dumps = orjson_dumps
-        allow_population_by_field_name = True
+from models.base import BaseProjectModel
+from models.genre import Genres
 
 
 class IdName(BaseModel):
-    id: str
+    id: uuid.UUID
     name: str
 
 
-class TypeChoices(str, Enum):
-    MOVIE = 'MOVIE'
-    TV_SHOW = 'TV_SHOW'
-
-
-class FilmShort(BaseModelOrjson):
+class FilmShort(BaseProjectModel):
+    """
+    Схемы ответов для:
+    /api/v1/films
+    /api/v1/films/search/
+    /api/v1/persons/<uuid:UUID>/film/
+    """
     title: str
-    description: str
+    imdb_rating: Optional[float]
 
-
-class Film(BaseModelOrjson):
-    rating: Optional[float]
-    title: str
-    description: Optional[str]
-    creation_date: Optional[datetime]
-    type: TypeChoices
-    # аннотированные поля
-    actors: List[IdName]
-    writers: List[IdName]
-    directors: List[IdName]
-    genres: List[IdName]
-
-    @validator('rating')
+    @validator('imdb_rating')
     def check_rating(cls, rating):
         if rating > 100 or rating < 0:
             raise ValueError('Ошибка валидации рейтинга')
         return rating
 
 
-class Genre(BaseModelOrjson):
-    name: str
-    description: str
-    films: List[FilmShort]
-
-
-class Person(BaseModelOrjson):
-    full_name: str
-    # ниже данные из таблицы PersonFilmWork
-    roles: List[str]
-    film_ids: List[str]
+class Film(FilmShort):
+    """
+    Схемы ответов для:
+    /api/v1/films/<uuid:UUID>/
+    """
+    title: str
+    imdb_rating: Optional[float]
+    description: Optional[str]
+    genres: List[Genres]
+    actors: Optional[List[IdName]]
+    writers: Optional[List[IdName]]
+    directors: Optional[List[IdName]]
