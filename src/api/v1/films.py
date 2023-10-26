@@ -1,6 +1,7 @@
 from uuid import UUID
-from typing import List, Optional
 from http import HTTPStatus
+from typing import List, Annotated
+
 from fastapi import APIRouter, Depends, HTTPException, Query
 
 from services.film import FilmService, get_film_service
@@ -19,8 +20,8 @@ router = APIRouter()
 )
 async def search_film(
     query: str,
-    page_size: int = Query(..., ge=1),
-    page_number: int = Query(..., ge=1),
+    page_size: Annotated[int, Query(ge=1)] = 50,
+    page_number: Annotated[int, Query(ge=1)] = 1,
     film_service: FilmService = Depends(get_film_service)
 ) -> List[FilmShort]:
     films = await film_service.get_films_by_query(
@@ -68,8 +69,8 @@ async def film_details(
 async def films(
     genre_id: UUID = Query(None),
     sort: str = Query('-imdb_rating'),
-    page_size: int = Query(..., ge=1),
-    page_number: int = Query(..., ge=1),
+    page_size: Annotated[int, Query(ge=1)] = 50,
+    page_number: Annotated[int, Query(ge=1)] = 1,
     film_service: FilmService = Depends(get_film_service)
 ) -> List[FilmShort]:
     if genre_id:
