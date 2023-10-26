@@ -9,7 +9,6 @@ from redis.asyncio import Redis
 
 from db.elastic import get_elastic
 from db.redis import get_redis
-from models import genre
 from models.genre import Genres
 
 
@@ -74,7 +73,10 @@ class GenreService:
             return None
         return Genres(**doc['_source'])
 
-    async def _genre_from_cache(self, key: str) -> None | Genres | list[Genres]:
+    async def _genre_from_cache(
+        self,
+        key: str
+    ) -> None | Genres | list[Genres]:
         data = await self.redis.get(key)
         if not data:
             return None
@@ -90,7 +92,7 @@ class GenreService:
 
 @lru_cache()
 def get_genre_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+    redis: Redis = Depends(get_redis),
+    elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> GenreService:
     return GenreService(redis, elastic)
