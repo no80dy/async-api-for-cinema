@@ -16,6 +16,8 @@ GENRE_CACHE_EXPIRE_IN_SECONDS = 5 * 60  # 5 min
 
 
 class GenreService:
+    """Класс GenreService содержит бизнес-логику по работе с жанрами."""
+
     def __init__(
         self,
         redis: Redis,
