@@ -9,7 +9,7 @@ from models.genre import Genres
 
 class IdName(BaseModel):
     id: uuid.UUID
-    full_name: str = Field(..., validation_alias='name')
+    name: str
 
 
 class FilmShort(BaseProjectModel):
