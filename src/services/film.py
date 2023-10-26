@@ -1,12 +1,11 @@
 import json
-import uuid
 from uuid import UUID
 from functools import lru_cache
 from typing import Optional, List, Any
 
-from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 from redis.asyncio import Redis
+from elasticsearch import AsyncElasticsearch, NotFoundError
 
 from db.elastic import get_elastic
 from db.redis import get_redis
@@ -17,6 +16,8 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
 
 class FilmService:
+    """Класс FilmService содержит бизнес-логику по работе с фильмами."""
+
     def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
         self.redis = redis
         self.elastic = elastic
@@ -27,7 +28,8 @@ class FilmService:
             # Если фильма нет в кеше, то ищем его в Elasticsearch
             film = await self._get_film_from_elastic(str(film_id))
             if not film:
-                # Если он отсутствует в Elasticsearch, значит, фильма вообще нет в базе
+                # Если он отсутствует в Elasticsearch,
+                # значит, фильма вообще нет в базе
                 return None
             # Сохраняем фильм  в кеш
             await self._put_film_to_cache(film.json(), str(film_id))
@@ -255,7 +257,7 @@ class FilmService:
 
 @lru_cache()
 def get_film_service(
-        redis: Redis = Depends(get_redis),
-        elastic: AsyncElasticsearch = Depends(get_elastic),
+    redis: Redis = Depends(get_redis),
+    elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> FilmService:
     return FilmService(redis, elastic)
