@@ -11,6 +11,9 @@ from models.genre import Genres
 router = APIRouter()
 
 
+DETAIL = 'genres not found'
+
+
 @router.get(
     '/{genre_id}',
     response_model=Genres,
@@ -26,7 +29,7 @@ async def genre_details(
 
     if not genre:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='genre not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
 
     return genre
@@ -46,6 +49,6 @@ async def genres(
 
     if not genres:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='genres not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
     return genres

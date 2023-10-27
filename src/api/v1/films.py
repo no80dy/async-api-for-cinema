@@ -10,6 +10,8 @@ from models.film import Film, FilmShort
 
 router = APIRouter()
 
+DETAIL = 'films not found'
+
 
 @router.get(
     '/search',
@@ -30,7 +32,7 @@ async def search_film(
 
     if not films:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='films not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
 
     return [
@@ -54,7 +56,7 @@ async def film_details(
 
     if not film:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='film not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
     return film
 
@@ -84,7 +86,7 @@ async def films(
 
     if not films:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='films not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
     return [
         FilmShort(id=film.id, title=film.title, imdb_rating=film.imdb_rating)

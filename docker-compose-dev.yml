@@ -39,7 +39,7 @@ services:
       - "discovery.type=single-node"
       - "xpack.security.enabled=false"  # для прода данный параметр удалить
     ports:
-      - "9200:9200"
+      - "9200:9200"  # необходимо для ETL в рамках разработки
 
   fastapi:
     build: ./src

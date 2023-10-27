@@ -13,6 +13,9 @@ from models.person import Person
 router = APIRouter()
 
 
+DETAIL = 'persons not found'
+
+
 @router.get(
     '/search',
     response_model=List[Person],
@@ -31,7 +34,7 @@ async def search_persons(
     )
     if not persons:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='persons not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
 
     return [
@@ -55,7 +58,7 @@ async def person_details(
 
     if not person:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='person not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
 
     return Person.model_validate_json(person.model_dump_json())
@@ -84,7 +87,7 @@ async def person_films(
 
     if not person_films:
         raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail='films not found'
+            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
         )
     return [
         FilmShort(id=film.id, title=film.title, imdb_rating=film.imdb_rating)
