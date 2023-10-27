@@ -1,7 +1,7 @@
 import json
 from uuid import UUID
 from functools import lru_cache
-from typing import Optional, List, Any
+from typing import Any
 
 from fastapi import Depends
 from redis.asyncio import Redis
@@ -22,7 +22,7 @@ class FilmService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_film_by_id(self, film_id: UUID) -> Optional[Film]:
+    async def get_film_by_id(self, film_id: UUID) -> Film | None:
         film = await self._film_from_cache(str(film_id))
         if not film:
             # Если фильма нет в кеше, то ищем его в Elasticsearch
@@ -41,7 +41,7 @@ class FilmService:
         query: str,
         page_size: int,
         page_number: int
-    ) -> List[Film]:
+    ) -> list[Film]:
         key = f'{query}/{page_size}/{page_number}'
         films = await self._film_from_cache(key)
         if not films:
@@ -60,7 +60,7 @@ class FilmService:
         sort: str,
         page_size: int,
         page_number: int
-    ) -> List[Film]:
+    ) -> list[Film]:
         key = f'{sort}/{page_size}/{page_number}'
         films = await self._film_from_cache(key)
         if not films:
@@ -80,7 +80,7 @@ class FilmService:
         sort: str,
         page_size: int,
         page_number: int
-    ) -> List[Film]:
+    ) -> list[Film]:
         key = f'{genre_id}/{sort}/{page_size}/{page_number}'
         films = await self._film_from_cache(key)
         if not films:
@@ -97,7 +97,7 @@ class FilmService:
     async def get_person_films(
         self,
         person: Person,
-    ) -> List[Film]:
+    ) -> list[Film]:
 
         film_ids = [str(film.id) for film in person.films]
 
@@ -118,7 +118,7 @@ class FilmService:
         sort: str,
         page_size: int,
         page_number: int
-    ) -> List[Film]:
+    ) -> list[Film]:
         elastic_query = {
             'query': {
                 'nested': {
@@ -154,7 +154,7 @@ class FilmService:
         query: str,
         page_size: int,
         page_number: int
-    ) -> List[Film]:
+    ) -> list[Film]:
         elastic_query = {
             'query': {
                 'fuzzy': {
@@ -181,7 +181,7 @@ class FilmService:
         sort: str,
         page_size: int,
         page_number: int
-    ) -> List[Film]:
+    ) -> list[Film]:
         elastic_query = {
             'sort': [
                 {
@@ -205,7 +205,7 @@ class FilmService:
     async def _get_films_by_ids_from_elastic(
             self,
             film_ids: list[str],
-    ) -> List[Film]:
+    ) -> list[Film]:
 
         elastic_query = {
             'query': {
@@ -224,7 +224,7 @@ class FilmService:
 
         return [Film(**doc['_source']) for doc in docs['hits']['hits']]
 
-    async def _get_film_from_elastic(self, film_id: str) -> Optional[Film]:
+    async def _get_film_from_elastic(self, film_id: str) -> Film | None:
         try:
             doc = await self.elastic.get(index='movies', id=film_id)
         except NotFoundError:

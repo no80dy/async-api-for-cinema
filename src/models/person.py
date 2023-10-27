@@ -1,11 +1,9 @@
-from typing import Optional, List
-
 from models.film import BaseProjectModel
 
 
 class PersonRoles(BaseProjectModel):
     """Список ролей, которые персона исполнила в конкретном кинопроизведении"""
-    roles: Optional[List[str]]
+    roles: list[str] | None
 
 
 class Person(BaseProjectModel):
