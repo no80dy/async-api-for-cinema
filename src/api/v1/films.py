@@ -1,6 +1,6 @@
 from uuid import UUID
 from http import HTTPStatus
-from typing import List, Annotated
+from typing import Annotated
 
 from fastapi import APIRouter, Depends, HTTPException, Query
 
@@ -15,7 +15,7 @@ DETAIL = 'films not found'
 
 @router.get(
     '/search',
-    response_model=List[FilmShort],
+    response_model=list[FilmShort],
     summary='Поиск кинопроизведений',
     description='Выполняет полнотекстовый поиск кинопроизведений',
     response_description='Список кинопроизведений с названием и рейтингом',
@@ -25,7 +25,7 @@ async def search_film(
     page_size: Annotated[int, Query(ge=1)] = 50,
     page_number: Annotated[int, Query(ge=1)] = 1,
     film_service: FilmService = Depends(get_film_service)
-) -> List[FilmShort]:
+) -> list[FilmShort]:
     films = await film_service.get_films_by_query(
         query, page_size, page_number
     )
@@ -63,7 +63,7 @@ async def film_details(
 
 @router.get(
     '/',
-    response_model=List[FilmShort],
+    response_model=list[FilmShort],
     summary='Список отсортированных кинопроизведений',
     description='Выполняет поиск кинопроизведений с опциональной фильтрацией по жанру и сортировкой',
     response_description='Список кинопроизведений с названием и рейтингом',
@@ -74,7 +74,7 @@ async def films(
     page_size: Annotated[int, Query(ge=1)] = 50,
     page_number: Annotated[int, Query(ge=1)] = 1,
     film_service: FilmService = Depends(get_film_service)
-) -> List[FilmShort]:
+) -> list[FilmShort]:
     if genre_id:
         films = await film_service.get_films_by_genre_id_with_sort(
             genre_id, sort, page_size, page_number

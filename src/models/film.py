@@ -1,5 +1,4 @@
 import uuid
-from typing import Optional, List
 
 from pydantic import BaseModel, validator
 
@@ -20,7 +19,7 @@ class FilmShort(BaseProjectModel):
     /api/v1/persons/<uuid:UUID>/film/
     """
     title: str
-    imdb_rating: Optional[float]
+    imdb_rating: float | None
 
     @validator('imdb_rating')
     def check_rating(cls, rating):
@@ -35,9 +34,9 @@ class Film(FilmShort):
     /api/v1/films/<uuid:UUID>/
     """
     title: str
-    imdb_rating: Optional[float]
-    description: Optional[str]
-    genres: List[Genres]
-    actors: Optional[List[IdName]]
-    writers: Optional[List[IdName]]
-    directors: Optional[List[IdName]]
+    imdb_rating: float | None
+    description: str | None
+    genres: list[Genres]
+    actors: list[IdName] | None
+    writers: list[IdName] | None
+    directors: list[IdName] | None
