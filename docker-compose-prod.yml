@@ -6,19 +6,6 @@ services:
       - ALLOW_EMPTY_PASSWORD=yes  # для прода данный параметр удалить
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
 
-  db:
-    build:
-      context: .
-      dockerfile: Dockerfile-db
-    env_file:
-      - ./.env
-    environment:
-      - POSTGRES_USER=${DB_USER}
-      - POSTGRES_PASSWORD=${DB_PASSWORD}
-      - POSTGRES_DB=${DB_NAME}
-    volumes:
-      - pgdata:/var/lib/postgresql/data
-
   elastic:
     image: elasticsearch:8.6.2
     environment:
