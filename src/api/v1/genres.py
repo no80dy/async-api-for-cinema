@@ -1,7 +1,8 @@
 from uuid import UUID
 from http import HTTPStatus
+from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException
+from fastapi import APIRouter, Depends, HTTPException, Path
 
 from services.genre import GenreService, get_genre_service
 from models.genre import Genres
@@ -21,7 +22,7 @@ DETAIL = 'genres not found'
     response_description='Информация по жанру'
 )
 async def genre_details(
-    genre_id: UUID,
+    genre_id: Annotated[UUID, Path(description='Идентификатор жанра')],
     genre_service: GenreService = Depends(get_genre_service)
 ) -> Genres:
     genre = await genre_service.get_genre_by_id(genre_id)
