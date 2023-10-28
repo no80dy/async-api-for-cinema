@@ -2,7 +2,7 @@ from uuid import UUID
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 
 from services.film import FilmService, get_film_service
 from models.film import Film, FilmShort
@@ -21,9 +21,9 @@ DETAIL = 'films not found'
     response_description='Список кинопроизведений с названием и рейтингом',
 )
 async def search_film(
-    query: str,
-    page_size: Annotated[int, Query(ge=1)] = 50,
-    page_number: Annotated[int, Query(ge=1)] = 1,
+    query: Annotated[str, Query(description='Текст запроса для поиска')],
+    page_size: Annotated[int, Query(description='Размер страницы', ge=1)] = 50,
+    page_number: Annotated[int, Query(description='Номер страницы', ge=1)] = 1,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[FilmShort]:
     films = await film_service.get_films_by_query(
@@ -49,7 +49,7 @@ async def search_film(
     response_description='Полная информация о кинопроизведении',
 )
 async def film_details(
-    film_id: UUID,
+    film_id: Annotated[UUID, Path(description='Идентификатор кинопроизведения')],
     film_service: FilmService = Depends(get_film_service)
 ) -> Film:
     film = await film_service.get_film_by_id(film_id)
@@ -69,10 +69,10 @@ async def film_details(
     response_description='Список кинопроизведений с названием и рейтингом',
 )
 async def films(
-    genre_id: UUID = Query(None),
-    sort: str = Query('-imdb_rating'),
-    page_size: Annotated[int, Query(ge=1)] = 50,
-    page_number: Annotated[int, Query(ge=1)] = 1,
+    genre_id: Annotated[UUID | None, Query(description='Идентификатор жанра')] = None,
+    sort: Annotated[str, Query(description='Параметр сортировки')] = '-imdb_rating',
+    page_size: Annotated[int, Query(description='Размер страницы', ge=1)] = 50,
+    page_number: Annotated[int, Query(description='Номер страницы', ge=1)] = 1,
     film_service: FilmService = Depends(get_film_service)
 ) -> list[FilmShort]:
     if genre_id:

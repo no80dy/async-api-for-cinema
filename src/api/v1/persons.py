@@ -2,7 +2,7 @@ from uuid import UUID
 from http import HTTPStatus
 from typing import Annotated
 
-from fastapi import APIRouter, Depends, HTTPException, Query
+from fastapi import APIRouter, Depends, HTTPException, Query, Path
 
 from services.person import PersonService, get_person_service
 from services.film import FilmService, get_film_service
@@ -24,9 +24,9 @@ DETAIL = 'persons not found'
     response_description='Список персон со списком фильмов и ролей, исполненных в них'
 )
 async def search_persons(
-    query: str,
-    page_size: Annotated[int | None, Query(ge=1)] = 50,
-    page_number: Annotated[int | None, Query(ge=1)] = 1,
+    query: Annotated[str, Query(description='Текст запроса для поиска')],
+    page_size: Annotated[int, Query(description='Размер страницы', ge=1)] = 50,
+    page_number: Annotated[int, Query(description='Номер страницы', ge=1)] = 1,
     person_service: PersonService = Depends(get_person_service)
 ) -> list[Person]:
     persons = await person_service.get_persons_by_query(
@@ -51,7 +51,7 @@ async def search_persons(
     response_description='Информация о персоне'
 )
 async def person_details(
-    person_id: UUID,
+    person_id: Annotated[UUID, Path(description='Идентификатор пользователя')],
     person_service: PersonService = Depends(get_person_service)
 ) -> Person:
     person = await person_service.get_person_by_id(person_id)
@@ -72,7 +72,7 @@ async def person_details(
     response_description='Список фильмов, где участвовала конкретная персона'
 )
 async def person_films(
-    person_id: UUID,
+    person_id: Annotated[UUID, Path(description='Идентификатор пользователя')],
     person_service: PersonService = Depends(get_person_service),
     film_service: FilmService = Depends(get_film_service)
 ) -> list[FilmShort]:
