@@ -16,7 +16,7 @@ async def lifespan(app: FastAPI):
     # Подключаемся к базам данных при включении сервера
     redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
     elastic.es = AsyncElasticsearch(
-        hosts=[f'{config.ELASTIC_HOST}:{config.ELASTIC_PORT}', ]
+        hosts=[f'{settings.es_host}:{settings.es_port}', ]
     )
     yield
     # Отключаемся от баз при выключении сервера
