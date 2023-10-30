@@ -16,7 +16,7 @@ class TestSettings(BaseSettings):
     es_index_mapping: dict = es_shema_movies  # TODO: здесь только по фильмам, вероятно нужно добавить еще по жанрам и персонам
     es_index: str = 'movies'  # TODO: пока что только для фильмов. для персон и жанров отдельно делать?
 
-    service_url: str = 'fastapi:8000'
+    service_url: str = 'http://127.0.0.1:8000'
 
 
 test_settings = TestSettings()
