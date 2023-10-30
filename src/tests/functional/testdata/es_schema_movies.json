@@ -1,4 +1,4 @@
-es_shema_movies = {
+{
   "settings": {
     "refresh_interval": "1s",
     "analysis": {

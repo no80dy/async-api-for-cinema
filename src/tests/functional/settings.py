@@ -1,14 +1,7 @@
 # настройки для тестов
-
-import os
-
-from core.logger import LOGGING
 from pydantic_settings import BaseSettings
-from logging import config as logging_config
 
-
-with open('./es_schema_movies.json', 'r') as f:  # TODO путь актуализировать
-    es_schema_movies = f.read()
+from .testdata.es_mapping import es_shema_movies
 
 
 class TestSettings(BaseSettings):
@@ -20,7 +13,7 @@ class TestSettings(BaseSettings):
     es_host: str = 'elastic'
     es_port: int = 9200
     es_id_field: str = 'id'  # TODO: заполнил исходя из названия айди в дампе предыдущего проекта, не уверен что верно
-    es_index_mapping: dict = es_schema_movies.encode('utf-8')  # TODO: здесь только по фильмам, вероятно нужно добавить еще по жанрам и персонам
+    es_index_mapping: dict = es_shema_movies  # TODO: здесь только по фильмам, вероятно нужно добавить еще по жанрам и персонам
     es_index: str = 'movies'  # TODO: пока что только для фильмов. для персон и жанров отдельно делать?
 
     service_url: str = 'fastapi:8000'

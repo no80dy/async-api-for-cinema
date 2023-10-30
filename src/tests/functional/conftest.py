@@ -8,10 +8,10 @@ import pytest
 
 from elasticsearch import AsyncElasticsearch
 
-from tests.functional.settings import test_settings
+# from tests.functional.settings import test_settings
 
 
-# from .settings import test_settings
+from .settings import test_settings
 
 
 @pytest.fixture(scope='session')  # Этот аргумент позволяет выполнить фикстуру перед всеми тестами и завершить после всех тестов
