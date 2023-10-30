@@ -19,10 +19,7 @@ services:
       - "9200:9200"  # необходимо для ETL в рамках разработки
 
   fastapi:
-    build: ../../src
     image: fastapi-image
-    env_file:
-      - ../../fastapi.env
     depends_on:
       - elastic
       - redis
@@ -35,7 +32,6 @@ services:
     # запустился, сервис может ещё производить стартовую настройку, поэтому тесты могут начать посылать запросы раньше,
     # чем всё будет готово.
     entrypoint: >
-      sh -c "pip install -r /tests/functional/requirements.txt
-      && python3 /tests/functional/utils/wait_for_es.py
-      && python3 /tests/functional/utils/wait_for_redis.py
-      && pytest /tests/functional/src"
+      sh -c "python3 /app/tests/functional/utils/wait_for_es.py
+      && python3 /app/tests/functional/utils/wait_for_redis.py
+      && pytest /app/tests/functional/src"
