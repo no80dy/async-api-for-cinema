@@ -1,0 +1,41 @@
+# файл-конфигурация для запуска всей инфраструктуры с тестами.
+# TODO адаптировать этот компоуз под тесты: ссылки на докерфайлы, вольюмы/маунт-юинт файлы
+version: '3'
+services:
+
+  redis:
+    image: docker.io/bitnami/redis:7.2.1
+    environment:
+      - ALLOW_EMPTY_PASSWORD=yes  # для прода данный параметр удалить
+      - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
+
+  elastic:
+    image: elasticsearch:8.6.2
+    environment:
+      - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
+      - "discovery.type=single-node"
+      - "xpack.security.enabled=false"  # для прода данный параметр удалить
+    ports:
+      - "9200:9200"  # необходимо для ETL в рамках разработки
+
+  fastapi:
+    build: ../../src
+    image: fastapi-image
+    env_file:
+      - ../../fastapi.env
+    depends_on:
+      - elastic
+      - redis
+    ports:
+      - "8000:8000"
+
+  tests:
+    image: fastapi-image
+    # depends_on определяет, запустился ли основной процесс внутри Docker-контейнера. Однако, даже если процесс
+    # запустился, сервис может ещё производить стартовую настройку, поэтому тесты могут начать посылать запросы раньше,
+    # чем всё будет готово.
+    entrypoint: >
+      sh -c "pip install -r /tests/functional/requirements.txt
+      && python3 /tests/functional/utils/wait_for_es.py
+      && python3 /tests/functional/utils/wait_for_redis.py
+      && pytest /tests/functional/src"
