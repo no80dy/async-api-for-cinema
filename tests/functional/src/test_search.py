@@ -7,7 +7,6 @@ import pytest
 
 from elasticsearch import AsyncElasticsearch
 
-from tests.functional.conftest import make_get_request
 from tests.functional.settings import test_settings
 
 
@@ -28,7 +27,7 @@ from tests.functional.settings import test_settings
     ]
 )
 @pytest.mark.asyncio
-async def test_search(es_write_data, query_data, expected_answer):
+async def test_search(make_get_request, es_write_data, query_data, expected_answer):
     # 1. Генерируем данные для ES
 
     es_data = [{
