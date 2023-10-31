@@ -6,7 +6,7 @@ services:
   redis:
     image: docker.io/bitnami/redis:7.2.1
     environment:
-      - ALLOW_EMPTY_PASSWORD=yes  # для прода данный параметр удалить
+      - ALLOW_EMPTY_PASSWORD=yes
       - REDIS_DISABLE_COMMANDS=FLUSHDB,FLUSHALL
 
   elastic:
@@ -14,9 +14,9 @@ services:
     environment:
       - "ES_JAVA_OPTS=-Xms200m -Xmx200m"
       - "discovery.type=single-node"
-      - "xpack.security.enabled=false"  # для прода данный параметр удалить
+      - "xpack.security.enabled=false"
     ports:
-      - "9200:9200"  # необходимо для ETL в рамках разработки
+      - "9200:9200"
 
   fastapi:
     build: ../../../src
@@ -29,9 +29,6 @@ services:
 
   tests:
     image: fastapi-image
-    # depends_on определяет, запустился ли основной процесс внутри Docker-контейнера. Однако, даже если процесс
-    # запустился, сервис может ещё производить стартовую настройку, поэтому тесты могут начать посылать запросы раньше,
-    # чем всё будет готово.
     entrypoint: >
       sh -c "python3 /app/tests/functional/utils/wait_for_es.py
       && python3 /app/tests/functional/utils/wait_for_redis.py
