@@ -7,6 +7,7 @@ from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
 from db import elastic, redis
+# from db.redis import Redis
 from core.config import settings
 from api.v1 import films, genres, persons
 
@@ -14,13 +15,13 @@ from api.v1 import films, genres, persons
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Подключаемся к базам данных при включении сервера
-    redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
+    redis.cache = Redis(host=settings.redis_host, port=settings.redis_port)
     elastic.es = AsyncElasticsearch(
         hosts=[f'{settings.es_host}:{settings.es_port}', ]
     )
     yield
     # Отключаемся от баз при выключении сервера
-    await redis.redis.close()
+    await redis.cache.close()
     await elastic.es.close()
 
 

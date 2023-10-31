@@ -8,7 +8,7 @@ from redis.asyncio import Redis
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
 from db.elastic import get_elastic
-from db.redis import get_redis
+from db.redis import get_redis, cache
 from models.film import Film
 from models.person import Person
 
