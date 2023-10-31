@@ -22,7 +22,7 @@ async def es_client():
     await client.close()
 
 
-@pytest.fixture(scope='session')  # Этот аргумент позволяет выполнить фикстуру перед всеми тестами и завершить после всех тестов
+@pytest.fixture  # Этот аргумент позволяет выполнить фикстуру перед всеми тестами и завершить после всех тестов
 async def fastapi_session():
     session = aiohttp.ClientSession()
     yield session
@@ -45,10 +45,9 @@ def es_write_data(es_client: AsyncElasticsearch):
 @pytest.fixture
 def make_get_request(fastapi_session: aiohttp.ClientSession):  # TODO: разобраться когда здесь фикстуру принимаем, как параметры правильно принимать для внутренней функции
     async def inner(endpoint: str, query_data: dict):
-        url = test_settings.service_url + f'/api/v1{endpoint}'
+        url = test_settings.service_url + f'/api/v1/films{endpoint}'
         async for session in fastapi_session:
             response = await session.get(url, params=query_data)
-            print('***1 = ', response)
             body = await response.json()
             headers = response.headers
             status = response.status

@@ -31,9 +31,7 @@ async def search_film(
     )
 
     if not films:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
-        )
+        return []
 
     return [
         FilmShort(id=film.id, title=film.title, imdb_rating=film.imdb_rating)
