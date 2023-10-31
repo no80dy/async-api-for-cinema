@@ -6,20 +6,22 @@ from contextlib import asynccontextmanager
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from core import config
 from db import elastic, redis
+# from db.redis import Redis
+from core.config import settings
 from api.v1 import films, genres, persons
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     # Подключаемся к базам данных при включении сервера
-    redis.redis = Redis(host=config.REDIS_HOST, port=config.REDIS_PORT)
+    redis.cache = Redis(host=settings.redis_host, port=settings.redis_port)
     elastic.es = AsyncElasticsearch(
-        hosts=[f'{config.ELASTIC_HOST}:{config.ELASTIC_PORT}'])
+        hosts=[f'{settings.es_host}:{settings.es_port}', ]
+    )
     yield
     # Отключаемся от баз при выключении сервера
-    await redis.redis.close()
+    await redis.cache.close()
     await elastic.es.close()
 
 
@@ -27,7 +29,7 @@ app = FastAPI(
     description='Информация о фильмах, жанрах и людях, участвовавших в создании произведения',
     version='1.0.0',
     # Конфигурируем название проекта. Оно будет отображаться в документации
-    title=config.PROJECT_NAME,
+    title=settings.project_name,
     # Адрес документации в красивом интерфейсе
     docs_url='/api/openapi',
     # Адрес документации в формате OpenAPI

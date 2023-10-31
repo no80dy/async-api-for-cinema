@@ -1,7 +1,7 @@
 import json
 from uuid import UUID
 from functools import lru_cache
-from typing import Optional, List, Any
+from typing import Any
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
@@ -29,7 +29,7 @@ class GenreService:
     async def get_genre_by_id(
         self,
         genre_id: UUID
-    ) -> Optional[Genres]:
+    ) -> Genres | None:
         genre = await self._genre_from_cache(str(genre_id))
         if not genre:
             genre = await self._get_genre_by_id_from_elastic(genre_id)
@@ -40,7 +40,7 @@ class GenreService:
             await self._put_genre_to_cache(genre.json(), str(genre_id))
         return genre
 
-    async def get_genres(self) -> List[Genres]:
+    async def get_genres(self) -> list[Genres]:
         genres = await self._genre_from_cache('genres')
         if not genres:
             genres = await self._get_genres_from_elastic()
@@ -52,7 +52,7 @@ class GenreService:
 
         return genres
 
-    async def _get_genres_from_elastic(self) -> List[Genres]:
+    async def _get_genres_from_elastic(self) -> list[Genres]:
         query = {
             'query': {
                 'match_all': {}
@@ -68,7 +68,7 @@ class GenreService:
     async def _get_genre_by_id_from_elastic(
         self,
         genre_id: UUID
-    ) -> Optional[Genres]:
+    ) -> Genres | None:
         try:
             doc = await self.elastic.get(index='genres', id=genre_id)
         except NotFoundError:

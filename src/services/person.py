@@ -1,7 +1,7 @@
 import json
 import uuid
 from functools import lru_cache
-from typing import Optional, Any
+from typing import Any
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
@@ -22,7 +22,7 @@ class PersonService:
         self.redis = redis
         self.elastic = elastic
 
-    async def get_person_by_id(self, person_id: uuid.UUID) -> Optional[Person]:
+    async def get_person_by_id(self, person_id: uuid.UUID) -> Person | None:
         """
         Функция возвращает объект персоны.
         Он опционален, так как персона может отсутствовать в базе.
@@ -43,7 +43,7 @@ class PersonService:
         query: str,
         page_size: int,
         page_number: int
-    ) -> Optional[list[Person]]:
+    ) -> list[Person] | None:
         """Функция возвращает список персон на основании запроса."""
         key = f'{query}/{page_size}/{page_number}'
         persons = await self._person_from_cache(key)
@@ -64,7 +64,7 @@ class PersonService:
     async def _get_person_from_elastic(
         self,
         person_id: uuid.UUID
-    ) -> Optional[Person]:
+    ) -> Person | None:
         try:
             doc = await self.elastic.get(index='persons', id=str(person_id))
         except NotFoundError:
@@ -94,7 +94,7 @@ class PersonService:
         query: str,
         page_size: int,
         page_number: int
-    ) -> Optional[list[Person]]:
+    ) -> list[Person] | None:
         elastic_query = {
             'query': {
                 'fuzzy': {

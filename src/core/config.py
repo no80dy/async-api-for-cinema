@@ -1,21 +1,22 @@
 import os
-from logging import config as logging_config
 
 from core.logger import LOGGING
+from pydantic_settings import BaseSettings
+from logging import config as logging_config
+
+
+class Settings(BaseSettings):
+    project_name: str = 'movies'
+    redis_host: str = 'redis'
+    redis_port: int = 6379
+    es_host: str = 'elastic'
+    es_port: int = 9200
+
+
+settings = Settings()
 
 # Применяем настройки логирования
 logging_config.dictConfig(LOGGING)
-
-# Название проекта. Используется в Swagger-документации
-PROJECT_NAME = os.getenv('PROJECT_NAME', 'movies')
-
-# Настройки Redis
-REDIS_HOST = os.getenv('REDIS_HOST', '127.0.0.1')
-REDIS_PORT = int(os.getenv('REDIS_PORT', 6379))
-
-# Настройки Elasticsearch
-ELASTIC_HOST = os.getenv('ES_HOST', '127.0.0.1')
-ELASTIC_PORT = int(os.getenv('ES_PORT', 9200))
 
 # Корень проекта
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
