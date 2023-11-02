@@ -1,16 +1,14 @@
 import json
-from uuid import UUID
 from functools import lru_cache
 from typing import Any
+from uuid import UUID
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
-from redis.asyncio import Redis
 
+from db.cache import Cache, get_cache
 from db.elastic import get_elastic
-from db.redis import get_redis
 from models.genre import Genres
-
 
 GENRE_CACHE_EXPIRE_IN_SECONDS = 5 * 60  # 5 min
 
@@ -20,10 +18,10 @@ class GenreService:
 
     def __init__(
         self,
-        redis: Redis,
+        cache: Cache,
         elastic: AsyncElasticsearch
     ) -> None:
-        self.redis = redis
+        self.cache = cache
         self.elastic = elastic
 
     async def get_genre_by_id(
@@ -79,7 +77,7 @@ class GenreService:
         self,
         key: str
     ) -> None | Genres | list[Genres]:
-        data = await self.redis.get(key)
+        data = await self.cache.get_instance().get(key)
         if not data:
             return None
         if key == 'genres':
@@ -87,14 +85,14 @@ class GenreService:
         return Genres.parse_raw(data)
 
     async def _put_genre_to_cache(self, value: Any, key: str):
-        await self.redis.set(
+        await self.cache.get_instance().set(
             str(key), value, GENRE_CACHE_EXPIRE_IN_SECONDS
         )
 
 
 @lru_cache()
 def get_genre_service(
-    redis: Redis = Depends(get_redis),
+    cache: Cache = Depends(get_cache),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> GenreService:
-    return GenreService(redis, elastic)
+    return GenreService(cache, elastic)

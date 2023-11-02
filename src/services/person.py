@@ -5,12 +5,10 @@ from typing import Any
 
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
-from redis.asyncio import Redis
 
+from db.cache import Cache, get_cache
 from db.elastic import get_elastic
-from db.redis import get_redis
 from models.person import Person
-
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -18,8 +16,8 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 class PersonService:
     """Класс PersonService содержит бизнес-логику по работе с персонами."""
 
-    def __init__(self, redis: Redis, elastic: AsyncElasticsearch):
-        self.redis = redis
+    def __init__(self, cache: Cache, elastic: AsyncElasticsearch):
+        self.cache = cache
         self.elastic = elastic
 
     async def get_person_by_id(self, person_id: uuid.UUID) -> Person | None:
@@ -75,7 +73,7 @@ class PersonService:
         self,
         key: str
     ) -> None | Person | list[Person] | Any:
-        data = await self.redis.get(key)
+        data = await self.cache.get_instance().get(key)
         if not data:
             return None
 
@@ -87,7 +85,7 @@ class PersonService:
 
     async def _put_person_to_cache(self, value: Any, key: str):
         """Сохраняем данные о персоне в кеше, время жизни кеша — 5 минут."""
-        await self.redis.set(key, value, FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.cache.get_instance().set(key, value, FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def _get_persons_by_query_from_elastic(
         self,
@@ -122,7 +120,7 @@ class PersonService:
 
 @lru_cache()
 def get_person_service(
-    redis: Redis = Depends(get_redis),
+    cache: Cache = Depends(get_cache),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> PersonService:
-    return PersonService(redis, elastic)
+    return PersonService(cache, elastic)
