@@ -73,7 +73,7 @@ class PersonService:
         self,
         key: str
     ) -> None | Person | list[Person] | Any:
-        data = await self.cache.get_instance().get(key)
+        data = await self.cache.get(key)
         if not data:
             return None
 
@@ -85,7 +85,7 @@ class PersonService:
 
     async def _put_person_to_cache(self, value: Any, key: str):
         """Сохраняем данные о персоне в кеше, время жизни кеша — 5 минут."""
-        await self.cache.get_instance().set(key, value, FILM_CACHE_EXPIRE_IN_SECONDS)
+        await self.cache.set(key, value, FILM_CACHE_EXPIRE_IN_SECONDS)
 
     async def _get_persons_by_query_from_elastic(
         self,

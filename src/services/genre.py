@@ -77,7 +77,7 @@ class GenreService:
         self,
         key: str
     ) -> None | Genres | list[Genres]:
-        data = await self.cache.get_instance().get(key)
+        data = await self.cache.get(key)
         if not data:
             return None
         if key == 'genres':
@@ -85,7 +85,7 @@ class GenreService:
         return Genres.parse_raw(data)
 
     async def _put_genre_to_cache(self, value: Any, key: str):
-        await self.cache.get_instance().set(
+        await self.cache.set(
             str(key), value, GENRE_CACHE_EXPIRE_IN_SECONDS
         )
 

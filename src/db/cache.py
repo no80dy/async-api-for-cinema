@@ -11,7 +11,11 @@ class Cache(abc.ABC):
         pass
 
     @abc.abstractmethod
-    async def get_instance(self):
+    async def get(self, data):
+        pass
+
+    @abc.abstractmethod
+    async def set(self, key, value, ttl):
         pass
 
     @abc.abstractmethod
