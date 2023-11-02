@@ -1,8 +1,20 @@
+from db.storage import BaseStorage
 from elasticsearch import AsyncElasticsearch
 
-es: AsyncElasticsearch | None = None
+
+class ElasticStorage(BaseStorage):
+    def __init__(self, hosts: list[str]) -> None:
+        self.elastic = AsyncElasticsearch(hosts=hosts)
+
+    def get_instance(self) -> AsyncElasticsearch:
+        return self.elastic
+
+    async def close_instance(self) -> None:
+        await self.elastic.close()
 
 
-# Функция понадобится при внедрении зависимостей
-async def get_elastic() -> AsyncElasticsearch:
+es: ElasticStorage | None = None
+
+
+async def get_elastic() -> ElasticStorage:
     return es

@@ -7,6 +7,7 @@ from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 from redis.asyncio import Redis
 
+from db.storage import BaseStorage
 from db.elastic import get_elastic
 from db.redis import get_redis
 from models.genre import Genres
@@ -95,6 +96,6 @@ class GenreService:
 @lru_cache()
 def get_genre_service(
     redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
+    es: BaseStorage = Depends(get_elastic),
 ) -> GenreService:
-    return GenreService(redis, elastic)
+    return GenreService(redis, es.get_instance())

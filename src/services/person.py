@@ -8,6 +8,7 @@ from fastapi import Depends
 from redis.asyncio import Redis
 
 from db.elastic import get_elastic
+from db.storage import BaseStorage
 from db.redis import get_redis
 from models.person import Person
 
@@ -123,6 +124,6 @@ class PersonService:
 @lru_cache()
 def get_person_service(
     redis: Redis = Depends(get_redis),
-    elastic: AsyncElasticsearch = Depends(get_elastic),
+    es: BaseStorage = Depends(get_elastic),
 ) -> PersonService:
-    return PersonService(redis, elastic)
+    return PersonService(redis, es.get_instance())
