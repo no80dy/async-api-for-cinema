@@ -47,7 +47,7 @@ class StoragePersonHandler(ABC):
 
 class RedisPersonHandler(CachePersonHandler):
     def __init__(self, cache: RedisCache, expired_time: int) -> None:
-        self.cache = cache.instance
+        self.cache = cache.get_connection()
         self.expired_time = expired_time
 
     async def get_person(self, key: str) -> None | Person | list[Person] | Any:
@@ -65,7 +65,7 @@ class RedisPersonHandler(CachePersonHandler):
 
 class ElasticPersonHandler(StoragePersonHandler):
     def __init__(self, elastic: ElasticStorage) -> None:
-        self.elastic = elastic.instance
+        self.elastic = elastic.get_connection()
 
     async def get_persons_by_query(
         self,
