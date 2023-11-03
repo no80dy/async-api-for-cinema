@@ -231,7 +231,7 @@ class FilmService:
         return Film(**doc['_source'])
 
     async def _film_from_cache(self, key: str) -> None | Film | list[Film]:
-        data = await self.cache.get_instance().get(key)
+        data = await self.cache.get(key)
         if not data:
             return None
 
@@ -240,7 +240,7 @@ class FilmService:
         return [Film.parse_raw(obj) for obj in json.loads(data)]
 
     async def _put_film_to_cache(self, value: Any, key: str):
-        await self.cache.get_instance().set(
+        await self.cache.set(
             str(key), value, FILM_CACHE_EXPIRE_IN_SECONDS
         )
 
