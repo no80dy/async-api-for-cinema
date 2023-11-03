@@ -1,28 +1,8 @@
-import abc
-
-from redis.asyncio import Redis
-
-cache: Redis | None = None
+from src.db.redis import RedisCache
 
 
-class Cache(abc.ABC):
-    @abc.abstractmethod
-    def __init__(self):
-        pass
-
-    @abc.abstractmethod
-    async def get(self, data):
-        pass
-
-    @abc.abstractmethod
-    async def set(self, key, value, ttl):
-        pass
-
-    @abc.abstractmethod
-    def close(self):
-        pass
+cache: RedisCache | None = None
 
 
-# Функция понадобится при внедрении зависимостей
-async def get_cache() -> Redis:
+async def get_cache() -> RedisCache:
     return cache

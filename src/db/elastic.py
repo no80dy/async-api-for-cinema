@@ -1,8 +1,9 @@
 from elasticsearch import AsyncElasticsearch
 
-es: AsyncElasticsearch | None = None
 
+class ElasticStorage:
+    def __init__(self, hosts: list[str]):
+        self.instance = AsyncElasticsearch(hosts=hosts)
 
-# Функция понадобится при внедрении зависимостей
-async def get_elastic() -> AsyncElasticsearch:
-    return es
+    async def close(self):
+        await self.instance.close()
