@@ -9,4 +9,4 @@ class RedisCache:
         return self.connection
 
     async def close(self):
-        await self.instance.close()
+        await self.connection.close()
