@@ -22,7 +22,7 @@ async def es_client():
     await client.close()
 
 
-@pytest.fixture  # Этот аргумент позволяет выполнить фикстуру перед всеми тестами и завершить после всех тестов
+@pytest.fixture
 async def fastapi_session():
     session = aiohttp.ClientSession()
     yield session
