@@ -1,20 +1,24 @@
-from typing import Any, Coroutine
-
+from typing import Any
+from abc import ABC, abstractmethod
 from redis.asyncio import Redis
 
-from db.cache import Cache
+
+class ICache(ABC):
+    @abstractmethod
+    async def get(self, key: str) -> str | None:
+        pass
+
+    @abstractmethod
+    async def set(self, value: Any, key: str, expired_time: int) -> None:
+        pass
 
 
-class RedisCache(Cache):
-    def __init__(self, host, port):
-        self.instance = Redis(host=host, port=port)
+class RedisCache(ICache):
+    def __init__(self, **kwargs) -> None:
+        self.connection = Redis(**kwargs)
 
-    def get(self, data) -> Coroutine[Any, Any, str | bytes | None | Any]:
-        return self.instance.get(data)
+    async def set(self, value: Any, key: str, expired_time: int) -> None:
+        await self.connection.set(key, value, expired_time)
 
-    def set(self, key, value, ttl):
-        return self.instance.set(str(key), value, ttl)
-
-    def close(self):
-        self.instance.close()
-
+    async def get(self, key: str) -> str | None:
+        return await self.connection.get(key)

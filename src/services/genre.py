@@ -6,8 +6,9 @@ from uuid import UUID
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
-from db.cache import Cache, get_cache
-from db.elastic import get_elastic
+from db.cache import get_cache
+from db.redis import ICache
+from db.storage import get_elastic
 from models.genre import Genres
 
 GENRE_CACHE_EXPIRE_IN_SECONDS = 5 * 60  # 5 min
@@ -18,7 +19,7 @@ class GenreService:
 
     def __init__(
         self,
-        cache: Cache,
+        cache: ICache,
         elastic: AsyncElasticsearch
     ) -> None:
         self.cache = cache
@@ -92,7 +93,7 @@ class GenreService:
 
 @lru_cache()
 def get_genre_service(
-    cache: Cache = Depends(get_cache),
+    cache: ICache = Depends(get_cache),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> GenreService:
     return GenreService(cache, elastic)
