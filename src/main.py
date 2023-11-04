@@ -8,8 +8,8 @@ from fastapi.responses import JSONResponse
 from api.v1 import films, genres, persons
 from core.config import settings
 
-from src.db.redis import RedisCache
-from src.db.elastic import ElasticStorage
+from db.redis import RedisCache
+from db.elastic import ElasticStorage
 
 from db import cache
 from db import storage
@@ -20,12 +20,12 @@ async def lifespan(app: FastAPI):
     cache.cache = RedisCache(
         host=settings.redis_host, port=settings.redis_port
     )
-    storage.storage = ElasticStorage(
+    storage.es = ElasticStorage(
         hosts=[f'{settings.es_host}:{settings.es_port}', ]
     )
     yield
     await cache.cache.close()
-    await storage.storage.close()
+    await storage.es.close()
 
 
 app = FastAPI(

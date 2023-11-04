@@ -1,4 +1,4 @@
-from src.db.redis import RedisCache
+from db.redis import RedisCache
 
 
 cache: RedisCache | None = None

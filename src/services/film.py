@@ -6,10 +6,13 @@ from uuid import UUID
 from elasticsearch import AsyncElasticsearch, NotFoundError
 from fastapi import Depends
 
-from db.cache import Cache, get_cache
-from db.elastic import get_elastic
+
+from db.cache import get_cache
+from db.redis import ICache
+from db.storage import get_elastic
 from models.film import Film
 from models.person import Person
+
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 
@@ -17,7 +20,7 @@ FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
 class FilmService:
     """Класс FilmService содержит бизнес-логику по работе с фильмами."""
 
-    def __init__(self, cache: Cache, elastic: AsyncElasticsearch):
+    def __init__(self, cache: ICache, elastic: AsyncElasticsearch):
         self.cache = cache
         self.elastic = elastic
 
@@ -146,7 +149,7 @@ class FilmService:
             )
         except NotFoundError:
             return []
-        return [Film(**doc['_source']) for doc in docs['hits']['hits']]
+        return [Film(**doc) for doc in docs]
 
     async def _get_films_by_query_from_elastic(
         self,
@@ -173,7 +176,7 @@ class FilmService:
             )
         except NotFoundError:
             return []
-        return [Film(**doc['_source']) for doc in docs['hits']['hits']]
+        return [Film(**doc) for doc in docs]
 
     async def _get_films_with_sort_from_elastic(
         self,
@@ -199,7 +202,7 @@ class FilmService:
             )
         except NotFoundError:
             return []
-        return [Film(**doc['_source']) for doc in docs['hits']['hits']]
+        return [Film(**doc) for doc in docs]
 
     async def _get_films_by_ids_from_elastic(
             self,
@@ -221,14 +224,14 @@ class FilmService:
         except NotFoundError:
             return []
 
-        return [Film(**doc['_source']) for doc in docs['hits']['hits']]
+        return [Film(**doc) for doc in docs]
 
     async def _get_film_from_elastic(self, film_id: str) -> Film | None:
         try:
             doc = await self.elastic.get(index='movies', id=film_id)
         except NotFoundError:
             return None
-        return Film(**doc['_source'])
+        return Film(**doc)
 
     async def _film_from_cache(self, key: str) -> None | Film | list[Film]:
         data = await self.cache.get(key)
@@ -256,7 +259,7 @@ class FilmService:
 
 @lru_cache()
 def get_film_service(
-    cache: Cache = Depends(get_cache),
+    cache: ICache = Depends(get_cache),
     elastic: AsyncElasticsearch = Depends(get_elastic),
 ) -> FilmService:
     return FilmService(cache, elastic)

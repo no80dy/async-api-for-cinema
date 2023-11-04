@@ -1,53 +1,20 @@
 import json
 import uuid
 
-from abc import ABC, abstractmethod
 from functools import lru_cache
 from typing import Any
-
-from elasticsearch import NotFoundError
 from fastapi import Depends
 
 from db.storage import get_elastic
 from db.cache import get_cache
-
-from db.elastic import ElasticStorage
-from db.redis import RedisCache
-
+from db.elastic import IStorage
+from db.redis import ICache
 from models.person import Person
 
 
-class CachePersonHandler(ABC):
-    @abstractmethod
-    async def get_person(key: str):
-        pass
-
-    @abstractmethod
-    async def put_person(value: str, key: str):
-        pass
-
-
-class StoragePersonHandler(ABC):
-    @abstractmethod
-    async def get_persons_by_query(
-        self,
-        query: str,
-        page_size: int,
-        page_number: int
-    ) -> list[Person] | None:
-        pass
-
-    @abstractmethod
-    async def get_person(
-        self,
-        person_id: uuid.UUID
-    ) -> Person | None:
-        pass
-
-
-class RedisPersonHandler(CachePersonHandler):
-    def __init__(self, cache: RedisCache, expired_time: int) -> None:
-        self.cache = cache.get_connection()
+class CachePersonHandler:
+    def __init__(self, cache: ICache, expired_time: int) -> None:
+        self.cache = cache
         self.expired_time = expired_time
 
     async def get_person(self, key: str) -> None | Person | list[Person] | Any:
@@ -63,9 +30,9 @@ class RedisPersonHandler(CachePersonHandler):
         await self.cache.set(key, value, self.expired_time)
 
 
-class ElasticPersonHandler(StoragePersonHandler):
-    def __init__(self, elastic: ElasticStorage) -> None:
-        self.elastic = elastic.get_connection()
+class ElasticPersonHandler:
+    def __init__(self, storage: IStorage) -> None:
+        self.storage = storage
 
     async def get_persons_by_query(
         self,
@@ -86,23 +53,19 @@ class ElasticPersonHandler(StoragePersonHandler):
             'from': self._calculate_offset(page_size, page_number)
         }
 
-        try:
-            docs = await self.elastic.search(
-                index='persons', body=elastic_query
-            )
-        except NotFoundError:
+        docs = await self.storage.filter(index='persons', body=elastic_query)
+        if not docs:
             return []
-        return [Person(**doc['_source']) for doc in docs['hits']['hits']]
+        return [Person(**doc) for doc in docs]
 
     async def get_person(
         self,
         person_id: uuid.UUID
     ) -> Person | None:
-        try:
-            doc = await self.elastic.get(index='persons', id=str(person_id))
-        except NotFoundError:
+        doc = await self.storage.get(scheme='persons', id=str(person_id))
+        if not doc:
             return None
-        return Person(**doc['_source'])
+        return Person(**doc)
 
     def _calculate_offset(self, page_size: int, page_number: int) -> int:
         return (page_number - 1) * page_size
@@ -114,7 +77,7 @@ class PersonService:
     def __init__(
         self,
         cache_handler: CachePersonHandler,
-        storage_handler: StoragePersonHandler
+        storage_handler: ElasticPersonHandler
     ) -> None:
         self.cache_handler = cache_handler
         self.storage_handler = storage_handler
@@ -161,9 +124,10 @@ class PersonService:
 
 @lru_cache()
 def get_person_service(
-    cache: RedisCache = Depends(get_cache),
-    elastic: ElasticStorage = Depends(get_elastic),
+    cache: ICache = Depends(get_cache),
+    elastic: IStorage = Depends(get_elastic),
 ) -> PersonService:
-    cache_handler = RedisPersonHandler(cache, 60 * 5)
+    cache_handler = CachePersonHandler(cache, 60 * 5)
     storage_handler = ElasticPersonHandler(elastic)
+
     return PersonService(cache_handler, storage_handler)
