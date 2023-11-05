@@ -17,8 +17,8 @@ class RedisCache(ICache):
     def __init__(self, **kwargs) -> None:
         self.connection = Redis(**kwargs)
 
-    async def set(self, value: Any, key: str, expired_time: int) -> None:
-        await self.connection.set(key, value, expired_time)
-
     async def get(self, key: str) -> str | None:
         return await self.connection.get(key)
+
+    async def set(self, value: Any, key: str, expired_time: int) -> None:
+        await self.connection.set(key, value, expired_time)
