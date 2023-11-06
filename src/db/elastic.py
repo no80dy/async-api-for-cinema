@@ -4,11 +4,11 @@ from elasticsearch import AsyncElasticsearch, NotFoundError
 
 class IStorage(ABC):
     @abstractmethod
-    async def get_by_id(self, scheme: str, id: str) -> dict | None:
+    async def get_by_id(self, index: str, id: str) -> dict | None:
         pass
 
     @abstractmethod
-    async def search(self, scheme: str, query: str) -> list[dict] | None:
+    async def search(self, index: str, body: str) -> list[dict] | None:
         pass
 
 
@@ -29,5 +29,5 @@ class ElasticStorage(IStorage):
                 index=index, body=body
             )
         except NotFoundError:
-            return []
+            return None
         return [doc['_source'] for doc in docs['hits']['hits']]

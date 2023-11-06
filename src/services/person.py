@@ -7,12 +7,17 @@ from fastapi import Depends
 
 from db.storage import get_elastic
 from db.cache import get_cache
-from db.elastic import IStorage
+from db.elastic import ElasticStorage
 from db.redis import ICache
 from models.person import Person
 
 
+PERSON_CACHE_EXPIRE_IN_SECONDS = 5 * 60  # 5 min
+
+
 class CachePersonHandler:
+    """Класс CachePersonHandler отвечает за работу с кешом по информации о персонах."""
+
     def __init__(self, cache: ICache, expired_time: int) -> None:
         self.cache = cache
         self.expired_time = expired_time
@@ -31,8 +36,19 @@ class CachePersonHandler:
 
 
 class ElasticPersonHandler:
-    def __init__(self, storage: IStorage) -> None:
+    """Класс ElasticPersonHandler отвечает за работу с эластиком по информации о персонах."""
+
+    def __init__(self, storage: ElasticStorage) -> None:
         self.storage = storage
+
+    async def get_person_by_id(
+        self,
+        person_id: uuid.UUID
+    ) -> Person | None:
+        doc = await self.storage.get_by_id(index='persons', id=str(person_id))
+        if not doc:
+            return None
+        return Person(**doc)
 
     async def get_persons_by_query(
         self,
@@ -53,19 +69,10 @@ class ElasticPersonHandler:
             'from': self._calculate_offset(page_size, page_number)
         }
 
-        docs = await self.storage.filter(index='persons', body=elastic_query)
+        docs = await self.storage.search(index='persons', body=elastic_query)
         if not docs:
-            return []
-        return [Person(**doc) for doc in docs]
-
-    async def get_person(
-        self,
-        person_id: uuid.UUID
-    ) -> Person | None:
-        doc = await self.storage.get(scheme='persons', id=str(person_id))
-        if not doc:
             return None
-        return Person(**doc)
+        return [Person(**doc) for doc in docs]
 
     def _calculate_offset(self, page_size: int, page_number: int) -> int:
         return (page_number - 1) * page_size
@@ -87,9 +94,9 @@ class PersonService:
         Функция возвращает объект персоны.
         Он опционален, так как персона может отсутствовать в базе.
         """
-        person = await self.cache_handler.put_person(str(person_id))
+        person = await self.cache_handler.get_person(str(person_id))
         if not person:
-            person = await self.storage_handler.get_person(person_id)
+            person = await self.storage_handler.get_person_by_id(person_id)
             if not person:
                 return None
             await self.cache_handler.put_person(
@@ -103,7 +110,7 @@ class PersonService:
         query: str,
         page_size: int,
         page_number: int
-    ) -> list[Person] | None:
+    ) -> list[Person]:
         """Функция возвращает список персон на основании запроса."""
         key = f'{query}/{page_size}/{page_number}'
         persons = await self.cache_handler.get_person(key)
@@ -114,9 +121,8 @@ class PersonService:
 
             if not persons:
                 return []
-            value = json.dumps(
-                [person.model_dump_json() for person in persons]
-            )
+            value = json.dumps([person.model_dump_json()
+                               for person in persons])
             await self.cache_handler.put_person(value, key)
 
         return persons
@@ -125,9 +131,9 @@ class PersonService:
 @lru_cache()
 def get_person_service(
     cache: ICache = Depends(get_cache),
-    elastic: IStorage = Depends(get_elastic),
+    elastic: ElasticStorage = Depends(get_elastic),
 ) -> PersonService:
-    cache_handler = CachePersonHandler(cache, 60 * 5)
+    cache_handler = CachePersonHandler(cache, PERSON_CACHE_EXPIRE_IN_SECONDS)
     storage_handler = ElasticPersonHandler(elastic)
 
     return PersonService(cache_handler, storage_handler)
