@@ -1,5 +1,6 @@
 import pytest
 
+from ..settings import test_settings
 from ..testdata.es_data import es_data
 
 
@@ -59,7 +60,7 @@ HTTP_422 = 422
 @pytest.mark.asyncio
 async def test_search(make_get_request, es_write_data, query_data, expected_answer):
     # Загружаем данные в ES
-    await es_write_data(es_data)
+    await es_write_data(es_data, test_settings.es_movies_index)
 
     # 3. Запрашиваем данные из ES по API
     response = await make_get_request('/search', query_data)
@@ -110,7 +111,7 @@ async def test_search(make_get_request, es_write_data, query_data, expected_answ
 @pytest.mark.asyncio
 async def test_search_negative(make_get_request, es_write_data, query_data, expected_http_code):
     # Загружаем данные в ES
-    await es_write_data(es_data)
+    await es_write_data(es_data, test_settings.es_movies_index)
 
     # 3. Запрашиваем данные из ES по API
     response = await make_get_request('/search', query_data)

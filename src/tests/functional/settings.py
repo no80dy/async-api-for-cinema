@@ -1,7 +1,7 @@
 # настройки для тестов
 from pydantic_settings import BaseSettings
 
-from .testdata.es_mapping import es_shema_movies
+from .testdata.es_mapping import es_shema_movies, es_shema_persons, es_shema_genres
 
 
 class TestSettings(BaseSettings):
@@ -12,9 +12,14 @@ class TestSettings(BaseSettings):
 
     es_host: str = 'elastic'
     es_port: int = 9200
-    es_id_field: str = 'id'  # TODO: заполнил исходя из названия айди в дампе предыдущего проекта, не уверен что верно
-    es_index_mapping: dict = es_shema_movies  # TODO: здесь только по фильмам, вероятно нужно добавить еще по жанрам и персонам
-    es_index: str = 'movies'  # TODO: пока что только для фильмов. для персон и жанров отдельно делать?
+    es_id_field: str = 'id'
+    es_index_movies_mapping: dict = es_shema_movies
+    es_index_persons_mapping: dict = es_shema_persons
+    es_index_genres_mapping: dict = es_shema_genres
+
+    es_movies_index: str = 'movies'
+    es_persons_index: str = 'persons'
+    es_genres_index: str = 'genres'
 
     service_url: str = 'http://fastapi:8000'
 
