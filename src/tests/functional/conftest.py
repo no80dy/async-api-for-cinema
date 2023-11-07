@@ -24,8 +24,8 @@ def es_create_schema(es_client):
 
     yield
     # client.indices.delete(index=test_settings.es_movies_index)
-    # client.indices.delete(index=test_settings.es_genres_index)
-    # client.indices.delete(index=test_settings.es_persons_index)
+    client.indices.delete(index=test_settings.es_genres_index)
+    client.indices.delete(index=test_settings.es_persons_index)
 
 
 
