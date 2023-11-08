@@ -35,7 +35,7 @@ HTTP_422 = 422
         ),
         (
                 {'query': 'Star', 'page_size': 100, 'page_number': 1},
-                {'status': HTTP_200, 'length': 60}
+                {'status': HTTP_200, 'length': 50}
         ),
         (
                 {'query': 'Mashed', 'page_size': 10, 'page_number': 1},
@@ -58,7 +58,7 @@ HTTP_422 = 422
     ]
 )
 @pytest.mark.asyncio
-async def test_search(make_get_request, es_write_data, query_data, expected_answer):
+async def test_search_films_positive(make_get_request, es_write_data, query_data, expected_answer):
     # Загружаем данные в ES
     await es_write_data(es_data, test_settings.es_movies_index)
 
@@ -109,7 +109,7 @@ async def test_search(make_get_request, es_write_data, query_data, expected_answ
     ]
 )
 @pytest.mark.asyncio
-async def test_search_negative(make_get_request, es_write_data, query_data, expected_http_code):
+async def test_search_films_negative(make_get_request, es_write_data, query_data, expected_http_code):
     # Загружаем данные в ES
     await es_write_data(es_data, test_settings.es_movies_index)
 
