@@ -1,3 +1,4 @@
+from typing import Any
 from abc import ABC, abstractmethod
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
@@ -23,7 +24,7 @@ class ElasticStorage(IStorage):
             return None
         return doc['_source']
 
-    async def search(self, index: str, body: str) -> list[dict] | None:
+    async def search(self, index: str, body: Any) -> list[dict] | None:
         try:
             docs = await self.connection.search(
                 index=index, body=body

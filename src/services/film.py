@@ -36,7 +36,7 @@ class CacheFilmHandler:
         await self.cache.set(key, value, self.expired_time)
 
 
-class ElasticFilmHandler():
+class ElasticFilmHandler:
     """Класс ElasticFilmHandler отвечает за работу с эластиком по информации о фильмах."""
 
     def __init__(self, storage: ElasticStorage) -> None:
@@ -46,7 +46,7 @@ class ElasticFilmHandler():
         self,
         film_id: uuid.UUID
     ) -> Film | None:
-        doc = await self.storage.get_by_id(index='films', id=str(film_id))
+        doc = await self.storage.get_by_id(index='movies', id=str(film_id))
         if not doc:
             return None
         return Film(**doc)
