@@ -3,7 +3,7 @@ import datetime
 
 DATA_ROWS = 50
 
-es_data = [{
+es_films_data = [{
         'id': str(uuid.uuid4()),
         'imdb_rating': 8.5,
         'genres': [{'id': str(uuid.uuid4()), 'name': 'Action'}],

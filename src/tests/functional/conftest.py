@@ -59,7 +59,7 @@ def es_write_data(es_client: AsyncElasticsearch):
 @pytest.fixture
 def make_get_request(fastapi_session: aiohttp.ClientSession):  # TODO: разобраться когда здесь фикстуру принимаем, как параметры правильно принимать для внутренней функции
     async def inner(endpoint: str, query_data: dict):
-        url = test_settings.service_url + f'/api/v1/films{endpoint}'
+        url = test_settings.service_url + f'/api/v1/{endpoint}'
         async for session in fastapi_session:
             response = await session.get(url, params=query_data)
             body = await response.json()
