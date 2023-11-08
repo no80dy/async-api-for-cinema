@@ -7,9 +7,12 @@ es_data = [{
         'genres': [{'id': str(uuid.uuid4()), 'name': 'Action'}],
         'title': 'The Star',
         'description': 'New World',
-        'director': ['Stan'],
-        'actors_names': ['Ann', 'Bob'],
-        'writers_names': ['Ben', 'Howard'],
+        'actors_names': 'Ann',
+        'writers_names': 'Ben',
+        'directors': [
+            {'id': str(uuid.uuid4()), 'name': 'Ann'},
+            {'id': str(uuid.uuid4()), 'name': 'Bob'}
+        ],
         'actors': [
             {'id': str(uuid.uuid4()), 'name': 'Ann'},
             {'id': str(uuid.uuid4()), 'name': 'Bob'}
@@ -18,7 +21,10 @@ es_data = [{
             {'id': str(uuid.uuid4()), 'name': 'Ben'},
             {'id': str(uuid.uuid4()), 'name': 'Howard'}
         ],
-        'created_at': datetime.datetime.now().isoformat(),
-        'updated_at': datetime.datetime.now().isoformat(),
-        'film_work_type': 'movie'
+        'creation_date': datetime.datetime.now().isoformat(),
+
+        'type': 'type',
+        'genres_names': 'genres_names',
+        'directors_names': 'directors_names',
+
     } for _ in range(60)]
