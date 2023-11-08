@@ -33,7 +33,7 @@ class CacheFilmHandler:
         return [Film.model_validate_json(obj) for obj in json.loads(data)]
 
     async def put_film(self, value: Any, key: str):
-        await self.cache.set(key, value, self.expired_time)
+        await self.cache.set(value, key, self.expired_time)
 
 
 class ElasticFilmHandler:
