@@ -1,69 +1,103 @@
 import pytest
 
 from ..settings import test_settings
-from ..testdata.es_data import es_data
-
+from ..testdata.es_data import es_films_data, es_persons_data
 
 HTTP_200 = 200
 HTTP_422 = 422
-
 
 #  Название теста должно начинаться со слова `test_`
 #  Любой тест с асинхронными вызовами нужно оборачивать декоратором `pytest.mark.asyncio`, который следит за запуском и работой цикла событий.
 
 @pytest.mark.parametrize(
-    'query_data, expected_answer',
+    'query_data, expected_answer, endpoint, data, index',
     [
         # дефолтная пагинация
         (
                 {'query': 'Star'},
-                {'status': HTTP_200, 'length': 50}
+                {'status': HTTP_200, 'length': 50},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
+        ),
+        (
+                {'query': 'Mat'},
+                {'status': HTTP_200, 'length': 50},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
         ),
         (
                 {'query': 'Mashed'},
-                {'status': HTTP_200, 'length': 0}
+                {'status': HTTP_200, 'length': 0},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
         (
                 {'query': ''},
-                {'status': HTTP_200, 'length': 0}
+                {'status': HTTP_200, 'length': 0},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
 
         # передаем значения пагинации
         (
                 {'query': 'Star', 'page_size': 10, 'page_number': 1},
-                {'status': HTTP_200, 'length': 10}
+                {'status': HTTP_200, 'length': 10},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
         (
                 {'query': 'Star', 'page_size': 100, 'page_number': 1},
-                {'status': HTTP_200, 'length': 60}
+                {'status': HTTP_200, 'length': 50},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
         (
                 {'query': 'Mashed', 'page_size': 10, 'page_number': 1},
-                {'status': HTTP_200, 'length': 0}
+                {'status': HTTP_200, 'length': 0},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
         (
                 {'query': '', 'page_size': 10, 'page_number': 1},
-                {'status': HTTP_200, 'length': 0}
+                {'status': HTTP_200, 'length': 0},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
 
         # передается часть параметров пагинации
         (
                 {'query': 'Star', 'page_size': 10},
-                {'status': HTTP_200, 'length': 10}
+                {'status': HTTP_200, 'length': 10},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
         (
                 {'query': 'Star', 'page_number': 1},
-                {'status': HTTP_200, 'length': 50}
+                {'status': HTTP_200, 'length': 50},
+                'films/search',
+                es_films_data,
+                test_settings.es_movies_index,
         ),
     ]
 )
 @pytest.mark.asyncio
-async def test_search(make_get_request, es_write_data, query_data, expected_answer):
+async def test_search_films_positive(
+        make_get_request, es_write_data, query_data, expected_answer, endpoint, data, index
+):
     # Загружаем данные в ES
-    await es_write_data(es_data, test_settings.es_movies_index)
+    await es_write_data(data, index)
 
     # 3. Запрашиваем данные из ES по API
-    response = await make_get_request('/search', query_data)
+    response = await make_get_request(endpoint, query_data)
 
     # 4. Проверяем ответ
     assert (
@@ -76,45 +110,51 @@ async def test_search(make_get_request, es_write_data, query_data, expected_answ
 
 
 @pytest.mark.parametrize(
-    'query_data, expected_http_code',
+    'query_data, expected_http_code, endpoint',
     [
         # невалидные значения пагинации
         (
                 {'query': 'Star', 'page_size': -10, 'page_number': -1},
                 HTTP_422,
+                'films/search',
         ),
         (
                 {'query': 'Mashed', 'page_size': 10, 'page_number': -1},
                 HTTP_422,
+                'films/search',
         ),
         (
                 {'query': '', 'page_size': -10, 'page_number': 1},
                 HTTP_422,
+                'films/search',
         ),
 
         # передается часть параметров пагинации невалидными
         (
                 {'query': 'Star', 'page_size': -10},
                 HTTP_422,
+                'films/search',
         ),
         (
                 {'query': 'Star', 'page_number': -1},
                 HTTP_422,
+                'films/search',
         ),
 
         (
                 {'query': 'Star', 'page_size': -5},
                 HTTP_422,
+                'films/search',
         ),
     ]
 )
 @pytest.mark.asyncio
-async def test_search_negative(make_get_request, es_write_data, query_data, expected_http_code):
+async def test_search_films_negative(make_get_request, es_write_data, query_data, expected_http_code, endpoint):
     # Загружаем данные в ES
-    await es_write_data(es_data, test_settings.es_movies_index)
+    await es_write_data(es_films_data, test_settings.es_movies_index)
 
     # 3. Запрашиваем данные из ES по API
-    response = await make_get_request('/search', query_data)
+    response = await make_get_request(endpoint, query_data)
 
     # 4. Проверяем ответ
     assert response.get('status') == expected_http_code, 'при невалидных значениях, получен ответ отличный от 422'

@@ -1,7 +1,9 @@
 import uuid
 import datetime
 
-es_data = [{
+DATA_ROWS = 50
+
+es_films_data = [{
         'id': str(uuid.uuid4()),
         'imdb_rating': 8.5,
         'genres': [{'id': str(uuid.uuid4()), 'name': 'Action'}],
@@ -27,4 +29,14 @@ es_data = [{
         'genres_names': 'genres_names',
         'directors_names': 'directors_names',
 
-    } for _ in range(60)]
+    } for _ in range(DATA_ROWS)]
+
+
+es_persons_data = [{
+    'id': str(uuid.uuid4()),
+    'full_name': 'Mat Lucas',
+    'films': [
+        {'id': str(uuid.uuid4()), 'roles': ['Actor']},
+        {'id': str(uuid.uuid4()), 'roles': ['Director', 'Writer']}
+    ]
+} for _ in range(DATA_ROWS)]
