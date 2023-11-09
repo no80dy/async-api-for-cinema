@@ -1,15 +1,8 @@
 # файл со всеми общими фикстурами для тестов.
-import datetime
-import uuid
-import json
 
 import aiohttp
 import pytest
-
 from elasticsearch import AsyncElasticsearch, Elasticsearch
-
-# from tests.functional.settings import test_settings
-
 
 from .settings import test_settings
 from .utils.helpers import get_es_bulk_query
@@ -30,10 +23,10 @@ def es_create_schema():
 
 
 @pytest.fixture(scope='session')  # Этот аргумент позволяет выполнить фикстуру перед всеми тестами и завершить после всех тестов
-async def es_client():
-    client = AsyncElasticsearch(hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
+def es_client():
+    client = Elasticsearch(hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
     yield client
-    await client.close()
+    client.close()
 
 
 @pytest.fixture
@@ -48,10 +41,9 @@ def es_write_data(es_client: AsyncElasticsearch):
     async def inner(data: list[dict], index):
         bulk_query = get_es_bulk_query(data, index, test_settings.es_id_field)
         str_query = '\n'.join(bulk_query) + '\n'
-        async for client in es_client:
-            response = await client.bulk(str_query, refresh=True)
-            if response['errors']:
-                raise Exception('Ошибка записи данных в Elasticsearch')
+        response = es_client.bulk(str_query, refresh=True)
+        if response['errors']:
+            raise Exception('Ошибка записи данных в Elasticsearch')
 
     return inner
 
