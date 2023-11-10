@@ -35,11 +35,25 @@ HTTP_422 = 422
                 test_settings.es_movies_index,
         ),
         (
+                {'query': 'Hello'},
+                {'status': HTTP_200, 'length': 0},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
+        ),
+        (
                 {'query': ''},
                 {'status': HTTP_200, 'length': 0},
                 'films/search',
                 es_films_data,
                 test_settings.es_movies_index,
+        ),
+        (
+                {'query': ''},
+                {'status': HTTP_200, 'length': 0},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
         ),
 
         # передаем значения пагинации
@@ -51,11 +65,25 @@ HTTP_422 = 422
                 test_settings.es_movies_index,
         ),
         (
+                {'query': 'Mat', 'page_size': 10, 'page_number': 1},
+                {'status': HTTP_200, 'length': 10},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
+        ),
+        (
                 {'query': 'Star', 'page_size': 100, 'page_number': 1},
                 {'status': HTTP_200, 'length': 50},
                 'films/search',
                 es_films_data,
                 test_settings.es_movies_index,
+        ),
+        (
+                {'query': 'Mat', 'page_size': 100, 'page_number': 1},
+                {'status': HTTP_200, 'length': 50},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
         ),
         (
                 {'query': 'Mashed', 'page_size': 10, 'page_number': 1},
@@ -65,11 +93,25 @@ HTTP_422 = 422
                 test_settings.es_movies_index,
         ),
         (
+                {'query': 'World', 'page_size': 10, 'page_number': 1},
+                {'status': HTTP_200, 'length': 0},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
+        ),
+        (
                 {'query': '', 'page_size': 10, 'page_number': 1},
                 {'status': HTTP_200, 'length': 0},
                 'films/search',
                 es_films_data,
                 test_settings.es_movies_index,
+        ),
+        (
+                {'query': '', 'page_size': 10, 'page_number': 1},
+                {'status': HTTP_200, 'length': 0},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
         ),
 
         # передается часть параметров пагинации
@@ -81,11 +123,25 @@ HTTP_422 = 422
                 test_settings.es_movies_index,
         ),
         (
+                {'query': 'Mat', 'page_size': 10},
+                {'status': HTTP_200, 'length': 10},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
+        ),
+        (
                 {'query': 'Star', 'page_number': 1},
                 {'status': HTTP_200, 'length': 50},
                 'films/search',
                 es_films_data,
                 test_settings.es_movies_index,
+        ),
+        (
+                {'query': 'Mat', 'page_number': 1},
+                {'status': HTTP_200, 'length': 50},
+                'persons/search',
+                es_persons_data,
+                test_settings.es_persons_index,
         ),
     ]
 )
@@ -129,6 +185,22 @@ async def test_search_films_positive(
                 'films/search',
         ),
 
+        (
+                {'query': 'Mat', 'page_size': -10, 'page_number': -1},
+                HTTP_422,
+                'persons/search',
+        ),
+        (
+                {'query': 'Mat', 'page_size': 10, 'page_number': -1},
+                HTTP_422,
+                'persons/search',
+        ),
+        (
+                {'query': '', 'page_size': -10, 'page_number': 1},
+                HTTP_422,
+                'persons/search',
+        ),
+
         # передается часть параметров пагинации невалидными
         (
                 {'query': 'Star', 'page_size': -10},
@@ -145,6 +217,23 @@ async def test_search_films_positive(
                 {'query': 'Star', 'page_size': -5},
                 HTTP_422,
                 'films/search',
+        ),
+
+        (
+                {'query': 'Star', 'page_size': -10},
+                HTTP_422,
+                'persons/search',
+        ),
+        (
+                {'query': 'Star', 'page_number': -1},
+                HTTP_422,
+                'persons/search',
+        ),
+
+        (
+                {'query': 'Star', 'page_size': -5},
+                HTTP_422,
+                'persons/search',
         ),
     ]
 )
