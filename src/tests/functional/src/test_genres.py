@@ -45,8 +45,12 @@ async def test_get_genre_by_id_positive(
     genre_id = genre_data.get('genre_id')
     response = await make_get_request(f'genres/{genre_id}', {})
 
-    assert response.get('status') == expected_genre_data.get('status')
-    assert dict(response.get('body')) == expected_genre_data.get('body')
+    assert (
+        response.get('status') == expected_genre_data.get('status')
+    ), 'При валидных передаче данных ответ должен быть HTTP_200 или HTTP_404'
+    assert (
+        response.get('body') == expected_genre_data.get('body')
+    ), 'Тело жанра в ответе должно быть идентично ожидаемому жанру'
 
 
 @pytest.mark.parametrize(
@@ -78,7 +82,9 @@ async def test_get_genre_by_genre_id_negative(
     genre_id = genre_data.get('genre_id')
     response = await make_get_request(f'genres/{genre_id}', {})
 
-    assert response.get('status') == expected_http_code.get('status')
+    assert (
+        response.get('status') == expected_http_code.get('status')
+    ), 'При передаче невалидных данных ответ должен быть равным HTTP_422'
 
 
 @pytest.mark.parametrize(
@@ -99,5 +105,9 @@ async def test_get_all_genres(
 
     response = await make_get_request('genres/', {})
 
-    assert response.get('status') == expected_genre_data.get('status')
-    assert len(response.get('body')) == expected_genre_data.get('length')
+    assert (
+        response.get('status') == expected_genre_data.get('status')
+    ), 'При валидных передаче данных ответ должен быть HTTP_200 или HTTP_404'
+    assert (
+        len(response.get('body')) == expected_genre_data.get('length')
+    ), 'Количество фильмов в ответе должно быть равно количеству ожидаемых'

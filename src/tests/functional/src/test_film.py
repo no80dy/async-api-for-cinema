@@ -82,8 +82,12 @@ async def test_search_film_by_film_id_positive(
     film_id = film_data.get('film_id')
     response = await make_get_request(f'films/{film_id}', {})
 
-    assert response.get('status') == expected_answer.get('status')
-    assert dict(response.get('body')) == expected_answer.get('body')
+    assert (
+        response.get('status') == expected_answer.get('status')
+    ), 'При валидных передаче данных ответ должен быть HTTP_200 или HTTP_404'
+    assert (
+        response.get('body') == expected_answer.get('body')
+    ), 'Тело фильма в ответе должно быть идентично ожидаемому фильму'
 
 
 @pytest.mark.parametrize(
@@ -91,11 +95,11 @@ async def test_search_film_by_film_id_positive(
     [
         (
             {'film_id': 'string'},
-            {'status': 422}
+            {'status': HTTP_422}
         ),
         (
             {'film_id': 0},
-            {'status': 422}
+            {'status': HTTP_422}
         )
     ]
 )
@@ -111,7 +115,9 @@ async def test_search_film_by_film_id_negative(
     film_id = film_data.get('film_id')
     response = await make_get_request(f'films/{film_id}', {})
 
-    assert response.get('status') == expected_answer.get('status')
+    assert (
+        response.get('status') == expected_answer.get('status')
+    ), 'При передаче невалидных данных ответ должен быть равным HTTP_422'
 
 
 @pytest.mark.parametrize(
@@ -138,8 +144,12 @@ async def test_films_pagination_positive(
 
     response = await make_get_request('films/', film_data)
 
-    assert response.get('status') == expected_answer.get('status')
-    assert len(response.get('body')) == expected_answer.get('length')
+    assert (
+        response.get('status') == expected_answer.get('status')
+    ), 'При валидных передаче данных ответ должен быть HTTP_200 или HTTP_404'
+    assert (
+        len(response.get('body')) == expected_answer.get('length')
+    ), 'Количество фильмов в ответе должно быть равно количеству ожидаемых'
 
 
 @pytest.mark.parametrize(
@@ -166,7 +176,9 @@ async def test_films_pagination_negative(
 
     response = await make_get_request('films/', film_data)
 
-    assert response.get('status') == expected_answer.get('status')
+    assert (
+        response.get('status') == expected_answer.get('status')
+    ), 'При передаче невалидных данных ответ должен быть равным HTTP_422'
 
 
 @pytest.mark.parametrize(
@@ -194,8 +206,12 @@ async def test_get_films_by_genre_id_positive(
     genre_id  = film_data.get('genre_id')
     response = await make_get_request('films/', {'genre_id': genre_id})
 
-    assert response.get('status') == expected_answer.get('status')
-    assert response.get('body') == expected_answer.get('body')
+    assert (
+        response.get('status') == expected_answer.get('status')
+    ), 'При валидных передаче данных ответ должен быть HTTP_200 или HTTP_404'
+    assert (
+        response.get('body') == expected_answer.get('body')
+    ), 'Тело ответа должно соответствовать ожидаемому'
 
 
 @pytest.mark.parametrize(
@@ -223,7 +239,9 @@ async def test_get_films_by_genre_id_negative(
     genre_id  = film_data.get('genre_id')
     response = await make_get_request('films/', { 'genre_id': genre_id, })
 
-    assert response.get('status') == expected_answer.get('status')
+    assert (
+        response.get('status') == expected_answer.get('status')
+    ), 'При передаче невалидных данных ответ должен быть равным HTTP_422'
 
 
 @pytest.mark.asyncio
@@ -240,13 +258,19 @@ async def test_get_film_from_cache(
     film_cache_mock = {'id': film_id_mock, 'title': 'data from cache'}
     film_storage_mock = {'id': film_id_mock, 'title': 'data from storage'}
 
-    with patch.object(
+    with (patch.object(
         cache_handler_mock, 'get_film', return_value=film_cache_mock
     ) as get_film_mock, patch.object(
         storage_handler_mock, 'get_film_by_id', return_value=film_storage_mock
-    ) as get_film_by_id_mock:
+    ) as get_film_by_id_mock):
         result = await film_service.get_film_by_id(film_id_mock)
 
-        assert get_film_mock.call_count == 1
-        assert get_film_by_id_mock.call_count == 0
-        assert result == film_cache_mock
+        assert (
+            get_film_mock.call_count == 1
+        ), 'Получение фильма из кэша происходит только один раз'
+        assert (
+            get_film_by_id_mock.call_count == 0
+        ), 'Получение кинопроизведения из хранилища не должно происходить'
+        assert (
+            result == film_cache_mock
+        ), 'Данные из кэша должны быть идентичны результату выполнения get_film_by_id'
