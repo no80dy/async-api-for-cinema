@@ -32,7 +32,7 @@ class CacheGenreHandler:
         return [Genres.model_validate_json(obj) for obj in json.loads(data)]
 
     async def put_genre(self, value: Any, key: str):
-        await self.cache.set(key, value, self.expired_time)
+        await self.cache.set(value, key, self.expired_time)
 
 
 class ElasticGenreHandler:
@@ -54,7 +54,8 @@ class ElasticGenreHandler:
         query = {
             'query': {
                 'match_all': {}
-            }
+            },
+            'size': 1000
         }
 
         docs = await self.storage.search(index='genres', body=query)
