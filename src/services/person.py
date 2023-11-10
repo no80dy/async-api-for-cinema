@@ -123,7 +123,7 @@ class PersonService:
                 return []
             value = json.dumps([person.model_dump_json()
                                for person in persons])
-            await self.cache_handler.put_person(value, key)
+            await self.cache_handler.put_person(key, value)
 
         return persons
 
