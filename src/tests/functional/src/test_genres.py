@@ -9,21 +9,18 @@ sys.path.append(str(Path(__file__).resolve().parents[3]))
 
 from ..settings import test_settings
 from ..testdata.es_data import es_genres_data
+from ..testdata.response_data import (
+    HTTP_200,
+    HTTP_404,
+    HTTP_422,
+    GENRES_RESPONSE_DATA
+)
+
 from services.genre import (
     GenreService,
     CacheGenreHandler,
     ElasticGenreHandler
 )
-
-GENRE_RESPONSE_DATA = [
-    {
-        'uuid': genre['id'],
-        'name': genre['name']
-    } for genre in es_genres_data]
-
-HTTP_200 = 200
-HTTP_422 = 422
-HTTP_404 = 404
 
 
 @pytest.mark.parametrize(
@@ -31,11 +28,11 @@ HTTP_404 = 404
     [
         (
             {'genre_id': es_genres_data[0]['id']},
-            {'status': HTTP_200, 'body': GENRE_RESPONSE_DATA[0]}
+            {'status': HTTP_200, 'body': GENRES_RESPONSE_DATA[0]}
         ),
         (
             {'genre_id': es_genres_data[1]['id']},
-            {'status': HTTP_200, 'body': GENRE_RESPONSE_DATA[1]}
+            {'status': HTTP_200, 'body': GENRES_RESPONSE_DATA[1]}
         ),
         (
             {'genre_id': str(uuid.uuid4())},
