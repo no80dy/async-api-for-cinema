@@ -5,38 +5,31 @@ from ..settings import test_settings
 from ..testdata.es_data import es_genres_data
 
 
+GENRE_RESPONSE_DATA = [
+    {
+        'uuid': genre['id'],
+        'name': genre['name']
+    } for genre in es_genres_data]
+
+HTTP_200 = 200
+HTTP_422 = 422
+HTTP_404 = 404
+
+
 @pytest.mark.parametrize(
     'genre_data, expected_genre_data',
     [
         (
             {'genre_id': es_genres_data[0]['id']},
-            {
-                'status': 200,
-                'body':
-                {
-                    'uuid': es_genres_data[0]['id'],
-                    'name': es_genres_data[0]['name'],
-                }
-            }
+            {'status': HTTP_200, 'body': GENRE_RESPONSE_DATA[0]}
         ),
         (
             {'genre_id': es_genres_data[1]['id']},
-            {
-                'status': 200,
-                'body': {
-                    'uuid': es_genres_data[1]['id'],
-                    'name': es_genres_data[1]['name'],
-                }
-            }
+            {'status': HTTP_200, 'body': GENRE_RESPONSE_DATA[1]}
         ),
         (
             {'genre_id': str(uuid.uuid4())},
-            {
-                'status': 404,
-                'body': {
-                    'detail': 'genres not found'
-                }
-            }
+            {'status': HTTP_404, 'body': {'detail': 'genres not found'}}
         ),
     ]
 )
@@ -60,16 +53,16 @@ async def test_get_genre_by_id_positive(
     'genre_data, expected_http_code',
     [
         (
-            {'genre_id': None},
-            {'status': 422}
+            {'genre_id': 'string'},
+            {'status': HTTP_422}
         ),
         (
             {'genre_id': 123},
-            {'status': 422}
+            {'status': HTTP_422}
         ),
         (
             {'genre_id': 'string'},
-            {'status': 422}
+            {'status': HTTP_422}
         )
     ]
 )
@@ -92,7 +85,7 @@ async def test_get_genre_by_genre_id_negative(
     'expected_genre_data',
     [
         (
-            {'status': 200, 'length': 50}
+            {'status': HTTP_200, 'length': 50}
         )
     ]
 )

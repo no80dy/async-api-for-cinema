@@ -244,10 +244,9 @@ async def test_get_film_from_cache(
         cache_handler_mock, 'get_film', return_value=film_cache_mock
     ) as get_film_mock, patch.object(
         storage_handler_mock, 'get_film_by_id', return_value=film_storage_mock
-    ) as get_film_by_id:
+    ) as get_film_by_id_mock:
         result = await film_service.get_film_by_id(film_id_mock)
 
-        get_film_mock.called_once_with(str(film_id_mock))
-        get_film_by_id.assert_not_called()
-
+        assert get_film_mock.call_count == 1
+        assert get_film_by_id_mock.call_count == 0
         assert result == film_cache_mock
