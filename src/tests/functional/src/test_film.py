@@ -245,23 +245,17 @@ async def test_get_films_by_genre_id_negative(
 
 
 @pytest.mark.asyncio
-async def test_get_film_from_cache(
-    make_get_request,
-    es_write_data
-):
+async def test_get_film_from_cache():
     storage_handler_mock = Mock(spec=ElasticFilmHandler)
     cache_handler_mock = Mock(spec=CacheFilmHandler)
     film_service = FilmService(cache_handler_mock, storage_handler_mock)
 
     film_id_mock = uuid.uuid4()
 
-    film_cache_mock = {'id': film_id_mock, 'title': 'data from cache'}
-    film_storage_mock = {'id': film_id_mock, 'title': 'data from storage'}
-
     with (patch.object(
-        cache_handler_mock, 'get_film', return_value=film_cache_mock
+        cache_handler_mock, 'get_film', return_value='cache data'
     ) as get_film_mock, patch.object(
-        storage_handler_mock, 'get_film_by_id', return_value=film_storage_mock
+        storage_handler_mock, 'get_film_by_id', return_value='storage data'
     ) as get_film_by_id_mock):
         result = await film_service.get_film_by_id(film_id_mock)
 
@@ -272,5 +266,5 @@ async def test_get_film_from_cache(
             get_film_by_id_mock.call_count == 0
         ), 'Получение кинопроизведения из хранилища не должно происходить'
         assert (
-            result == film_cache_mock
+            result == 'cache data'
         ), 'Данные из кэша должны быть идентичны результату выполнения get_film_by_id'

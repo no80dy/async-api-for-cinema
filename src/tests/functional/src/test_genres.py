@@ -1,9 +1,19 @@
+import sys
 import uuid
 import pytest
 
+from unittest.mock import Mock, patch
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
 from ..settings import test_settings
 from ..testdata.es_data import es_genres_data
-
+from services.genre import (
+    GenreService,
+    CacheGenreHandler,
+    ElasticGenreHandler
+)
 
 GENRE_RESPONSE_DATA = [
     {
@@ -111,3 +121,32 @@ async def test_get_all_genres(
     assert (
         len(response.get('body')) == expected_genre_data.get('length')
     ), 'Количество фильмов в ответе должно быть равно количеству ожидаемых'
+
+
+@pytest.mark.asyncio
+async def test_get_film_from_cache(
+    make_get_request,
+    es_write_data
+):
+    storage_handler_mock = Mock(spec=ElasticGenreHandler)
+    cache_handler_mock = Mock(spec=CacheGenreHandler)
+    film_service = GenreService(cache_handler_mock, storage_handler_mock)
+
+    genre_id_mock = uuid.uuid4()
+
+    with (patch.object(
+        cache_handler_mock, 'get_genre', return_value='cache data'
+    ) as get_film_mock, patch.object(
+        storage_handler_mock, 'get_genre_by_id', return_value='storage_data'
+    ) as get_film_by_id_mock):
+        result = await film_service.get_genre_by_id(genre_id_mock)
+
+        assert (
+            get_film_mock.call_count == 1
+        ), 'Получение фильма из кэша происходит только один раз'
+        assert (
+            get_film_by_id_mock.call_count == 0
+        ), 'Получение кинопроизведения из хранилища не должно происходить'
+        assert (
+            result == 'cache data'
+        ), 'Данные из кэша должны быть идентичны результату выполнения get_film_by_id'
