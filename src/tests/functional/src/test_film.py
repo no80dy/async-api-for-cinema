@@ -1,9 +1,19 @@
-import json
+import sys
 import uuid
 import pytest
 
+from unittest.mock import Mock, patch
+from pathlib import Path
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
 from ..settings import test_settings
 from ..testdata.es_data import es_films_data
+from services.film import (
+    FilmService,
+    CacheFilmHandler,
+    ElasticFilmHandler
+)
 
 
 FILMS_RESPONSE_DATA = [
@@ -216,27 +226,28 @@ async def test_get_films_by_genre_id_negative(
     assert response.get('status') == expected_answer.get('status')
 
 
-# @pytest.mark.parametrize(
-#     'film_data, expected_answer',
-#     [
-#         (
-#             {'film_id': es_films_data[0]['id']},
-#             {'body': es_films_data[0]}
-#         )
-#     ]
-# )
-# @pytest.mark.asyncio
-# async def test_film_cache(
-#     make_get_request,
-#     es_write_data,
-#     redis_client,
-#     film_data,
-#     expected_answer
-# ):
-#     await es_write_data(es_films_data, index=test_settings.es_movies_index)
-#
-#     film_id = film_data.get('film_id')
-#     response = await make_get_request(f'/{film_id}', {})
-#
-#     film_from_cache = await redis_client.get(str(film_id))
-#     assert json.loads(film_from_cache)['id'] == response['body']['uuid']
+@pytest.mark.asyncio
+async def test_get_film_from_cache(
+    make_get_request,
+    es_write_data
+):
+    storage_handler_mock = Mock(spec=ElasticFilmHandler)
+    cache_handler_mock = Mock(spec=CacheFilmHandler)
+    film_service = FilmService(cache_handler_mock, storage_handler_mock)
+
+    film_id_mock = uuid.uuid4()
+
+    film_cache_mock = {'id': film_id_mock, 'title': 'data from cache'}
+    film_storage_mock = {'id': film_id_mock, 'title': 'data from storage'}
+
+    with patch.object(
+        cache_handler_mock, 'get_film', return_value=film_cache_mock
+    ) as get_film_mock, patch.object(
+        storage_handler_mock, 'get_film_by_id', return_value=film_storage_mock
+    ) as get_film_by_id:
+        result = await film_service.get_film_by_id(film_id_mock)
+
+        get_film_mock.called_once_with(str(film_id_mock))
+        get_film_by_id.assert_not_called()
+
+        assert result == film_cache_mock
