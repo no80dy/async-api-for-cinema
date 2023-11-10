@@ -10,9 +10,14 @@ from db.cache import get_cache
 from db.elastic import ElasticStorage
 from db.redis import ICache
 from models.person import Person
+from core.config import settings
 
 
 PERSON_CACHE_EXPIRE_IN_SECONDS = 5 * 60  # 5 min
+
+
+def calculate_offset(page_size: int, page_number: int) -> int:
+    return (page_number - 1) * page_size
 
 
 class CachePersonHandler:
@@ -45,7 +50,9 @@ class ElasticPersonHandler:
         self,
         person_id: uuid.UUID
     ) -> Person | None:
-        doc = await self.storage.get_by_id(index='persons', id=str(person_id))
+        doc = await self.storage.get_by_id(
+            index=settings.es_persons_index, id=str(person_id)
+        )
         if not doc:
             return None
         return Person(**doc)
@@ -66,16 +73,15 @@ class ElasticPersonHandler:
                 }
             },
             'size': page_size,
-            'from': self._calculate_offset(page_size, page_number)
+            'from': calculate_offset(page_size, page_number)
         }
 
-        docs = await self.storage.search(index='persons', body=elastic_query)
+        docs = await self.storage.search(
+            index=settings.es_persons_index, body=elastic_query
+        )
         if not docs:
             return None
         return [Person(**doc) for doc in docs]
-
-    def _calculate_offset(self, page_size: int, page_number: int) -> int:
-        return (page_number - 1) * page_size
 
 
 class PersonService:

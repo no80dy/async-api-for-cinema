@@ -11,9 +11,22 @@ from db.storage import get_elastic
 from db.elastic import ElasticStorage
 from models.film import Film
 from models.person import Person
+from core.config import settings
 
 
 FILM_CACHE_EXPIRE_IN_SECONDS = 60 * 5  # 5 минут
+
+
+def calculate_offset(page_size: int, page_number: int) -> int:
+    return (page_number - 1) * page_size
+
+
+def get_sort_field(sort: str) -> str:
+    return sort[1:] if sort.startswith('-') else sort
+
+
+def get_sort_order(sort: str) -> str:
+    return 'desc' if sort.startswith('-') else 'asc'
 
 
 class CacheFilmHandler:
@@ -33,10 +46,10 @@ class CacheFilmHandler:
         return [Film.model_validate_json(obj) for obj in json.loads(data)]
 
     async def put_film(self, value: Any, key: str):
-        await self.cache.set(key, value, self.expired_time)
+        await self.cache.set(value, key, self.expired_time)
 
 
-class ElasticFilmHandler():
+class ElasticFilmHandler:
     """Класс ElasticFilmHandler отвечает за работу с эластиком по информации о фильмах."""
 
     def __init__(self, storage: ElasticStorage) -> None:
@@ -46,7 +59,9 @@ class ElasticFilmHandler():
         self,
         film_id: uuid.UUID
     ) -> Film | None:
-        doc = await self.storage.get_by_id(index='films', id=str(film_id))
+        doc = await self.storage.get_by_id(
+            index=settings.es_movies_index, id=str(film_id)
+        )
         if not doc:
             return None
         return Film(**doc)
@@ -67,10 +82,12 @@ class ElasticFilmHandler():
                 }
             },
             'size': page_size,
-            'from': self._calculate_offset(page_size, page_number)
+            'from': calculate_offset(page_size, page_number)
         }
 
-        docs = await self.storage.search(index='movies', body=elastic_query)
+        docs = await self.storage.search(
+            index=settings.es_movies_index, body=elastic_query
+        )
         if not docs:
             return None
         return [Film(**doc) for doc in docs]
@@ -84,16 +101,18 @@ class ElasticFilmHandler():
         elastic_query = {
             'sort': [
                 {
-                    self._get_sort_field(sort): {
-                        'order': self._get_sort_order(sort)
+                    get_sort_field(sort): {
+                        'order': get_sort_order(sort)
                     }
                 }
             ],
             'size': page_size,
-            'from': self._calculate_offset(page_size, page_number)
+            'from': calculate_offset(page_size, page_number)
         }
 
-        docs = await self.storage.search(index='movies', body=elastic_query)
+        docs = await self.storage.search(
+            index=settings.es_movies_index, body=elastic_query
+        )
         if not docs:
             return None
         return [Film(**doc) for doc in docs]
@@ -118,16 +137,18 @@ class ElasticFilmHandler():
             },
             'sort': [
                 {
-                    self._get_sort_field(sort): {
-                        'order': self._get_sort_order(sort)
+                    get_sort_field(sort): {
+                        'order': get_sort_order(sort)
                     }
                 }
             ],
             'size': page_size,
-            'from': self._calculate_offset(page_size, page_number)
+            'from': calculate_offset(page_size, page_number)
         }
 
-        docs = await self.storage.search(index='movies', body=elastic_query)
+        docs = await self.storage.search(
+            index=settings.es_movies_index, body=elastic_query
+        )
         if not docs:
             return None
         return [Film(**doc) for doc in docs]
@@ -144,22 +165,15 @@ class ElasticFilmHandler():
             }
         }
 
-        docs = await self.storage.search(index='movies', body=elastic_query)
+        docs = await self.storage.search(
+            index=settings.es_movies_index, body=elastic_query
+        )
         if not docs:
             return None
         return [Film(**doc) for doc in docs]
 
-    def _calculate_offset(self, page_size: int, page_number: int) -> int:
-        return (page_number - 1) * page_size
 
-    def _get_sort_field(self, sort: str) -> str:
-        return sort[1:] if sort.startswith('-') else sort
-
-    def _get_sort_order(self, sort: str) -> str:
-        return 'desc' if sort.startswith('-') else 'asc'
-
-
-class FilmService():
+class FilmService:
     """Класс FilmService содержит бизнес-логику по работе с фильмами."""
 
     def __init__(

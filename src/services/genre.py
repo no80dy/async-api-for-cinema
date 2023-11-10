@@ -10,6 +10,7 @@ from db.redis import ICache
 from db.storage import get_elastic
 from db.elastic import ElasticStorage
 from models.genre import Genres
+from core.config import settings
 
 
 GENRE_CACHE_EXPIRE_IN_SECONDS = 5 * 60  # 5 min
@@ -32,7 +33,7 @@ class CacheGenreHandler:
         return [Genres.model_validate_json(obj) for obj in json.loads(data)]
 
     async def put_genre(self, value: Any, key: str):
-        await self.cache.set(key, value, self.expired_time)
+        await self.cache.set(value, key, self.expired_time)
 
 
 class ElasticGenreHandler:
@@ -45,7 +46,9 @@ class ElasticGenreHandler:
         self,
         genre_id: uuid.UUID
     ) -> Genres | None:
-        doc = await self.storage.get_by_id(index='genres', id=str(genre_id))
+        doc = await self.storage.get_by_id(
+            index=settings.es_genres_index, id=str(genre_id)
+        )
         if not doc:
             return None
         return Genres(**doc)
@@ -54,10 +57,13 @@ class ElasticGenreHandler:
         query = {
             'query': {
                 'match_all': {}
-            }
+            },
+            'size': 1000
         }
 
-        docs = await self.storage.search(index='genres', body=query)
+        docs = await self.storage.search(
+            index=settings.es_genres_index, body=query
+        )
         if not docs:
             return None
         return [Genres(**doc) for doc in docs]

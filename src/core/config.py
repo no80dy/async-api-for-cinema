@@ -12,6 +12,10 @@ class Settings(BaseSettings):
     es_host: str = 'elastic'
     es_port: int = 9200
 
+    es_movies_index: str = 'movies'
+    es_genres_index: str = 'genres'
+    es_persons_index: str = 'persons'
+
 
 settings = Settings()
 

@@ -1,3 +1,4 @@
+from typing import Any
 from abc import ABC, abstractmethod
 from elasticsearch import AsyncElasticsearch, NotFoundError
 
@@ -11,6 +12,9 @@ class IStorage(ABC):
     async def search(self, index: str, body: str) -> list[dict] | None:
         pass
 
+    @abstractmethod
+    async def close(self):
+        pass
 
 class ElasticStorage(IStorage):
     def __init__(self, **kwargs) -> None:
@@ -23,7 +27,7 @@ class ElasticStorage(IStorage):
             return None
         return doc['_source']
 
-    async def search(self, index: str, body: str) -> list[dict] | None:
+    async def search(self, index: str, body: Any) -> list[dict] | None:
         try:
             docs = await self.connection.search(
                 index=index, body=body
@@ -31,3 +35,6 @@ class ElasticStorage(IStorage):
         except NotFoundError:
             return None
         return [doc['_source'] for doc in docs['hits']['hits']]
+
+    async def close(self):
+        await self.connection.close()

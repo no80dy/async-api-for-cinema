@@ -1,6 +1,7 @@
 import uuid
 import datetime
 
+
 DATA_ROWS = 50
 
 es_films_data = [{
@@ -40,3 +41,11 @@ es_persons_data = [{
         {'id': str(uuid.uuid4()), 'roles': ['Director', 'Writer']}
     ]
 } for _ in range(DATA_ROWS)]
+
+
+es_genres_data = [
+    {
+        'id': str(uuid.uuid4()),
+        'name': 'Action',
+        'description': 'This is description'
+    } for _ in range(DATA_ROWS)]
