@@ -12,6 +12,10 @@ class ICache(ABC):
     async def set(self, value: Any, key: str, expired_time: int) -> None:
         pass
 
+    @abstractmethod
+    async def close(self):
+        pass
+
 
 class RedisCache(ICache):
     def __init__(self, **kwargs) -> None:
@@ -22,3 +26,6 @@ class RedisCache(ICache):
 
     async def set(self, value: Any, key: str, expired_time: int) -> None:
         await self.connection.set(key, value, expired_time)
+
+    async def close(self):
+        await self.connection.close()
