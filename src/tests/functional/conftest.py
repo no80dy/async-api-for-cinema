@@ -4,9 +4,12 @@ import uuid
 import json
 
 import aiohttp
+import asyncio
+import pytest_asyncio
 import pytest
 
 from elasticsearch import AsyncElasticsearch, Elasticsearch
+from elasticsearch.helpers import async_bulk
 
 # from tests.functional.settings import test_settings
 
@@ -15,24 +18,15 @@ from .settings import test_settings
 from .utils.helpers import get_es_bulk_query
 
 
-@pytest.fixture(scope='session', autouse=True)
-def es_create_schema(es_client):
-    client = Elasticsearch(
-        hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
-    # client.indices.create(index=test_settings.es_movies_index, body=test_settings.es_index_movies_mapping)
-    client.indices.create(index=test_settings.es_persons_index,
-                          body=test_settings.es_index_persons_mapping)
-    client.indices.create(index=test_settings.es_genres_index,
-                          body=test_settings.es_index_genres_mapping)
-
-    yield
-    # client.indices.delete(index=test_settings.es_movies_index)
-    # client.indices.delete(index=test_settings.es_genres_index)
-    # client.indices.delete(index=test_settings.es_persons_index)
-
-
 # Этот аргумент позволяет выполнить фикстуру перед всеми тестами и завершить после всех тестов
-@pytest.fixture(scope='session')
+@pytest_asyncio.fixture(scope='session')
+def event_loop():
+    loop = asyncio.get_event_loop_policy().new_event_loop()
+    yield loop
+    loop.close()
+
+
+@pytest_asyncio.fixture(scope='session')
 async def es_client():
     client = AsyncElasticsearch(
         hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
@@ -40,41 +34,60 @@ async def es_client():
     await client.close()
 
 
-@pytest.fixture
+@pytest_asyncio.fixture(scope='session')
 async def fastapi_session():
     session = aiohttp.ClientSession()
     yield session
     await session.close()
 
 
-@pytest.fixture(scope='session')
+def pytest_sessionstart(session):
+    es_client = Elasticsearch(
+        hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
+
+    es_client.indices.create(index=test_settings.es_movies_index,
+                             body=test_settings.es_index_movies_mapping, ignore=400)
+    es_client.indices.create(index=test_settings.es_persons_index,
+                             body=test_settings.es_index_persons_mapping, ignore=400)
+    es_client.indices.create(index=test_settings.es_genres_index,
+                             body=test_settings.es_index_genres_mapping, ignore=400)
+
+
+# def pytest_sessionfinish(session, exitstatus=0):
+#     es_client = Elasticsearch(
+#         hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
+
+#     es_client.indices.delete(index=test_settings.es_movies_index)
+#     es_client.indices.delete(index=test_settings.es_genres_index)
+#     es_client.indices.delete(index=test_settings.es_persons_index)
+
+
+@pytest_asyncio.fixture
 def es_write_data(es_client: AsyncElasticsearch):
-    async def inner(data: list[dict], index):
+    async def inner(data: list[dict], index: str):
         bulk_query = get_es_bulk_query(data, index, test_settings.es_id_field)
-        str_query = '\n'.join(bulk_query) + '\n'
-        async for client in es_client:
-            response = await client.bulk(str_query, refresh=True)
-            if response['errors']:
-                raise Exception('Ошибка записи данных в Elasticsearch')
+        success, errors = await async_bulk(es_client, bulk_query)
+        if errors:
+            raise Exception('Ошибка записи данных в Elasticsearch')
+
+        return success, errors
 
     return inner
 
 
-@pytest.fixture
-# TODO: разобраться когда здесь фикстуру принимаем, как параметры правильно принимать для внутренней функции
+@pytest_asyncio.fixture
 def make_get_request(fastapi_session: aiohttp.ClientSession):
     async def inner(endpoint: str, query_data: dict = None):
         url = test_settings.service_url + f'/api/v1/{endpoint}'
-        async for session in fastapi_session:
-            response = await session.get(url, params=query_data)
-            body = await response.json()
-            headers = response.headers
-            status = response.status
+        response = await fastapi_session.get(url, params=query_data)
+        body = await response.json()
+        headers = response.headers
+        status = response.status
 
-            response = {
-                'body': body,
-                'headers': headers,
-                'status': status
-            }
-            return response
+        response = {
+            'body': body,
+            'headers': headers,
+            'status': status
+        }
+        return response
     return inner

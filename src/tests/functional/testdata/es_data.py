@@ -6,13 +6,18 @@ DATA_ROWS = 50
 
 es_data = [{
     'id': str(uuid.uuid4()),
-    'imdb_rating': 8.5,
-    'genres': [{'id': str(uuid.uuid4()), 'name': 'Action'}],
     'title': 'The Star',
     'description': 'New World',
-    'director': ['Stan'],
+    'imdb_rating': 8.5,
+    'type': 'movie',
+    'genres_names': ['Action'],
+    'genres': [{'id': str(uuid.uuid4()), 'name': 'Action'}],
+    'directors_names': ['Stan'],
     'actors_names': ['Ann', 'Bob'],
     'writers_names': ['Ben', 'Howard'],
+    'directors': [
+        {'id': str(uuid.uuid4()), 'name': 'Stan'}
+    ],
     'actors': [
         {'id': str(uuid.uuid4()), 'name': 'Ann'},
         {'id': str(uuid.uuid4()), 'name': 'Bob'}
@@ -21,9 +26,7 @@ es_data = [{
         {'id': str(uuid.uuid4()), 'name': 'Ben'},
         {'id': str(uuid.uuid4()), 'name': 'Howard'}
     ],
-    'created_at': datetime.datetime.now().isoformat(),
-    'updated_at': datetime.datetime.now().isoformat(),
-    'film_work_type': 'movie'
+    'creation_date': datetime.datetime.now().isoformat(),
 } for _ in range(60)]
 
 
@@ -38,10 +41,28 @@ es_persons_data = [{
 } for _ in range(DATA_ROWS)]
 
 es_person_films_data = [{
-    'id': str(uuid.uuid4()),
-    'full_name': 'Mat Lucas',
+    'id': es_data[0].get('actors')[0].get('id'),
+    'full_name': 'Ann',
     'films': [
-        {'id': str(uuid.uuid4()), 'roles': ['Actor']},
-        {'id': str(uuid.uuid4()), 'roles': ['Director', 'Writer']}
+        {'id': es_data[0].get('id'), 'roles': ['Actor']},
     ]
-} for _ in range(DATA_ROWS)]
+}]
+
+# es_person_films_data = [{
+#     'id': es_persons_data[0].get('films')[0].get('id'),
+#     'title': 'War',
+#     'description': 'New World',
+#     'imdb_rating': 10,
+#     'type': 'movie',
+#     'genres_names': ['Action'],
+#     'genres': [{'id': str(uuid.uuid4()), 'name': 'Action'}],
+#     'directors_names': ['Stan'],
+#     'actors_names': ['Ann', 'Bob'],
+#     'writers_names': ['Ben', 'Howard'],
+#     'directors': [],
+#     'actors': [
+#         {'id': es_persons_data[0].get('id'), 'name': 'Mat Lucas'},
+#     ],
+#     'writers': [],
+#     'creation_date': datetime.datetime.now().isoformat(),
+# }]
