@@ -1,8 +1,3 @@
-# файл со всеми общими фикстурами для тестов.
-import datetime
-import uuid
-import json
-
 import aiohttp
 import asyncio
 import pytest_asyncio
@@ -11,8 +6,7 @@ import pytest
 from elasticsearch import AsyncElasticsearch, Elasticsearch
 from elasticsearch.helpers import async_bulk
 
-# from tests.functional.settings import test_settings
-
+from redis.asyncio import Redis
 
 from .settings import test_settings
 from .utils.helpers import get_es_bulk_query
@@ -42,8 +36,14 @@ async def fastapi_session():
 
 
 def pytest_sessionstart(session):
+    """Удаляет все существующие индесы из эластика и создаем необходимые индесы в эластике перед началом тестирования."""
     es_client = Elasticsearch(
         hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
+
+    es_indicies = [test_settings.es_movies_index,
+                   test_settings.es_persons_index, test_settings.es_genres_index]
+    es_client.indices.delete(
+        index=es_indicies, ignore=404)
 
     es_client.indices.create(index=test_settings.es_movies_index,
                              body=test_settings.es_index_movies_mapping, ignore=400)
@@ -53,13 +53,15 @@ def pytest_sessionstart(session):
                              body=test_settings.es_index_genres_mapping, ignore=400)
 
 
-# def pytest_sessionfinish(session, exitstatus=0):
-#     es_client = Elasticsearch(
-#         hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
-
-#     es_client.indices.delete(index=test_settings.es_movies_index)
-#     es_client.indices.delete(index=test_settings.es_genres_index)
-#     es_client.indices.delete(index=test_settings.es_persons_index)
+@pytest_asyncio.fixture(autouse=True)
+def es_clean_all_data(es_client: AsyncElasticsearch):
+    """Удаляет все данные из индексов эластика перед каждым тестом."""
+    query_clean_all = {
+        "query": {
+            "match_all": {}
+        }
+    }
+    es_client.delete_by_query(index='_all', body=query_clean_all)
 
 
 @pytest_asyncio.fixture
@@ -71,7 +73,6 @@ def es_write_data(es_client: AsyncElasticsearch):
             raise Exception('Ошибка записи данных в Elasticsearch')
 
         return success, errors
-
     return inner
 
 
@@ -90,4 +91,28 @@ def make_get_request(fastapi_session: aiohttp.ClientSession):
             'status': status
         }
         return response
+    return inner
+
+
+@pytest_asyncio.fixture(scope='session')
+async def redis_client():
+    client = Redis(
+        host=test_settings.redis_host, port=test_settings.redis_port)
+    yield client
+    await client.close()
+
+
+@pytest_asyncio.fixture
+def redis_get(redis_client: Redis):
+    async def inner(key: str):
+        value = await redis_client.get(key)
+        return value
+    return inner
+
+
+@pytest_asyncio.fixture
+def redis_set(redis_client: Redis):
+    async def inner(key: str, value: str):
+        await redis_client.set(key, value)
+        return
     return inner

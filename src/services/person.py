@@ -31,7 +31,7 @@ class CachePersonHandler:
             return Person.model_validate_json(data)
         return [Person.model_validate_json(obj) for obj in json.loads(data)]
 
-    async def put_person(self, value: Any, key: str):
+    async def put_person(self, key: str, value: Any):
         await self.cache.set(key, value, self.expired_time)
 
 
@@ -99,9 +99,7 @@ class PersonService:
             person = await self.storage_handler.get_person_by_id(person_id)
             if not person:
                 return None
-            await self.cache_handler.put_person(
-                person.model_dump_json(), str(person_id)
-            )
+            await self.cache_handler.put_person(str(person_id), person.model_dump_json())
 
         return person
 

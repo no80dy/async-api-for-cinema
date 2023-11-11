@@ -32,7 +32,7 @@ class CacheFilmHandler:
             return Film.model_validate_json(data)
         return [Film.model_validate_json(obj) for obj in json.loads(data)]
 
-    async def put_film(self, value: Any, key: str):
+    async def put_film(self, key: str, value: Any):
         await self.cache.set(key, value, self.expired_time)
 
 
@@ -253,10 +253,13 @@ class FilmService():
             films = await self.storage_handler.get_films_by_ids(film_ids)
             if not films:
                 return []
-            value = json.dumps([film.model_dump_json() for film in films])
-            await self.cache_handler.put_film(value, key)
+            if len(films) == 1:
+                value = films[0].model_dump_json()
+            else:
+                value = json.dumps([film.model_dump_json() for film in films])
+            await self.cache_handler.put_film(key, value)
 
-        return films
+        return films if type(films) == list else [films]
 
 
 @lru_cache()

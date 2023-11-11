@@ -48,21 +48,10 @@ es_person_films_data = [{
     ]
 }]
 
-# es_person_films_data = [{
-#     'id': es_persons_data[0].get('films')[0].get('id'),
-#     'title': 'War',
-#     'description': 'New World',
-#     'imdb_rating': 10,
-#     'type': 'movie',
-#     'genres_names': ['Action'],
-#     'genres': [{'id': str(uuid.uuid4()), 'name': 'Action'}],
-#     'directors_names': ['Stan'],
-#     'actors_names': ['Ann', 'Bob'],
-#     'writers_names': ['Ben', 'Howard'],
-#     'directors': [],
-#     'actors': [
-#         {'id': es_persons_data[0].get('id'), 'name': 'Mat Lucas'},
-#     ],
-#     'writers': [],
-#     'creation_date': datetime.datetime.now().isoformat(),
-# }]
+person_cach_data = [{
+    'id': str(uuid.uuid4()),
+    'full_name': 'John',
+    'films': [
+        {'id': str(uuid.uuid4()), 'roles': ['Director']},
+    ]
+}]
