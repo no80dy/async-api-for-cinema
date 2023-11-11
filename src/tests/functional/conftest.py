@@ -26,15 +26,7 @@ async def es_client():
     client = AsyncElasticsearch(
         hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
     yield client
-    client.close()
-
-
-@pytest.fixture
-def redis_client():
-    client = Redis(host=test_settings.redis_host,
-                   port=test_settings.redis_port)
-    yield client
-    client.close()
+    await client.close()
 
 
 @pytest_asyncio.fixture(scope='session')
