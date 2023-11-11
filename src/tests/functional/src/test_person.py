@@ -7,7 +7,7 @@ import uuid
 import asyncio
 
 from ..settings import test_settings
-from ..testdata.es_data import es_data, es_persons_data, es_person_films_data, person_cach_data
+from ..testdata.es_data import es_films_data, es_persons_data, es_person_films_data, person_cach_data
 
 
 HTTP_200 = 200
@@ -27,14 +27,16 @@ HTTP_422 = 422
     ]
 )
 @pytest.mark.asyncio
-async def test_person(es_write_data, make_get_request, query_data, expected_answer):
-    # Загружаем данные в ES
+async def test_person(
+    es_write_data,
+    make_get_request,
+    query_data,
+    expected_answer
+):
     await es_write_data(es_persons_data, test_settings.es_persons_index)
 
-    # Запрашиваем данные из ES
     response = await make_get_request(f"persons/{query_data.get('id')}")
 
-    # Проверяем ответ
     assert (
         response.get('status') == expected_answer.get('status')
     ), 'При позитивном сценарии поиска персоны, ответ отличается от 200'
@@ -63,7 +65,11 @@ async def test_person(es_write_data, make_get_request, query_data, expected_answ
     ]
 )
 @pytest.mark.asyncio
-async def test_person_negative(make_get_request, query_data, expected_answer):
+async def test_person_negative(
+    make_get_request,
+    query_data,
+    expected_answer
+):
     response = await make_get_request(f"persons/{query_data.get('id')}")
 
     assert response.get(
@@ -79,20 +85,26 @@ async def test_person_negative(make_get_request, query_data, expected_answer):
             {'id': es_person_films_data[0].get('id')},
             {'status': HTTP_200,
              'body': [{
-                 'uuid':  es_data[0].get('id'),
-                 'title': es_data[0].get('title'),
-                 'imdb_rating': es_data[0].get('imdb_rating')
+                 'uuid':  es_films_data[0].get('id'),
+                 'title': es_films_data[0].get('title'),
+                 'imdb_rating': es_films_data[0].get('imdb_rating')
              },]
              }
         ),
     ]
 )
 @pytest.mark.asyncio
-async def test_person_films(es_write_data, make_get_request, query_data, expected_answer):
-    await es_write_data(es_data, test_settings.es_movies_index)
+async def test_person_films(
+    es_write_data,
+    make_get_request,
+    query_data,
+    expected_answer
+):
+    await es_write_data(es_films_data, test_settings.es_movies_index)
     await es_write_data(es_person_films_data, test_settings.es_persons_index)
 
     # Без этого костыля, данный тест иногда выполняется, обычно нет - видимо какая-то гонка, но как понять где?
+    # Кажется это связано с асинхронной загрузкой данных в эластик. Апи дергает элластик раньше. Почему?
     await asyncio.sleep(1)
 
     response = await make_get_request(f"persons/{query_data.get('id')}/film")
@@ -122,7 +134,11 @@ async def test_person_films(es_write_data, make_get_request, query_data, expecte
     ]
 )
 @pytest.mark.asyncio
-async def test_person_films_negative(make_get_request, query_data, expected_answer):
+async def test_person_films_negative(
+    make_get_request,
+    query_data,
+    expected_answer
+):
     response = await make_get_request(f"persons/{query_data.get('id')}/film")
 
     assert response.get(
@@ -143,7 +159,13 @@ async def test_person_films_negative(make_get_request, query_data, expected_answ
     ]
 )
 @pytest.mark.asyncio
-async def test_person_cach(redis_get, es_write_data, make_get_request, query_data, expected_answer):
+async def test_person_cach(
+    redis_get,
+    es_write_data,
+    make_get_request,
+    query_data,
+    expected_answer
+):
     """После запроса персоны по апи, идем в редис и ожидаем увидеть там запрошенную персону."""
     await es_write_data(person_cach_data, test_settings.es_persons_index)
     await make_get_request(f"persons/{query_data.get('id')}")
@@ -155,7 +177,10 @@ async def test_person_cach(redis_get, es_write_data, make_get_request, query_dat
 
 
 @pytest.mark.asyncio
-async def test_person_cach(redis_set, make_get_request):
+async def test_person_cach(
+    redis_set,
+    make_get_request
+):
     """Кладем в редис персону, которой точно нет в эластике. При запросе - ожидаем ответ из кеша."""
     key = str(str(uuid.uuid4()))
     value = {
@@ -185,22 +210,28 @@ async def test_person_cach(redis_set, make_get_request):
         (
             {'id': es_person_films_data[0].get('id')},
             {'body': {
-                'id': es_data[0].get('id'),
-                'title': es_data[0].get('title'),
-                'description': es_data[0].get('description'),
-                'imdb_rating': es_data[0].get('imdb_rating'),
-                'genres': es_data[0].get('genres'),
-                'directors': es_data[0].get('directors'),
-                'actors': es_data[0].get('actors'),
-                'writers': es_data[0].get('writers'),
+                'id': es_films_data[0].get('id'),
+                'title': es_films_data[0].get('title'),
+                'description': es_films_data[0].get('description'),
+                'imdb_rating': es_films_data[0].get('imdb_rating'),
+                'genres': es_films_data[0].get('genres'),
+                'directors': es_films_data[0].get('directors'),
+                'actors': es_films_data[0].get('actors'),
+                'writers': es_films_data[0].get('writers'),
             }, }
         ),
     ]
 )
 @pytest.mark.asyncio
-async def test_person_films_cach(redis_get, es_write_data, make_get_request, query_data, expected_answer):
+async def test_person_films_cach(
+    redis_get,
+    es_write_data,
+    make_get_request,
+    query_data,
+    expected_answer
+):
     """После запроса фильмов персоны по апи, идем в редис и ожидаем увидеть там список фильмов персоны."""
-    await es_write_data(es_data, test_settings.es_movies_index)
+    await es_write_data(es_films_data, test_settings.es_movies_index)
     await es_write_data(es_person_films_data, test_settings.es_persons_index)
 
     await make_get_request(f"persons/{query_data.get('id')}/film")
