@@ -1,27 +1,31 @@
-import uvicorn
-from redis.asyncio import Redis
-from elasticsearch import AsyncElasticsearch
 from contextlib import asynccontextmanager
+
+import uvicorn
 
 from fastapi import FastAPI
 from fastapi.responses import JSONResponse
 
-from db import elastic, redis
-from core.config import settings
 from api.v1 import films, genres, persons
+from core.config import settings
+
+from db.redis import RedisCache
+from db.elastic import ElasticStorage
+
+from db import cache
+from db import storage
 
 
 @asynccontextmanager
 async def lifespan(app: FastAPI):
-    # Подключаемся к базам данных при включении сервера
-    redis.redis = Redis(host=settings.redis_host, port=settings.redis_port)
-    elastic.es = AsyncElasticsearch(
+    cache.cache = RedisCache(
+        host=settings.redis_host, port=settings.redis_port
+    )
+    storage.es = ElasticStorage(
         hosts=[f'{settings.es_host}:{settings.es_port}', ]
     )
     yield
-    # Отключаемся от баз при выключении сервера
-    await redis.redis.close()
-    await elastic.es.close()
+    await cache.cache.close()
+    await storage.es.close()
 
 
 app = FastAPI(

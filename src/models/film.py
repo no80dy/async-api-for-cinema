@@ -33,10 +33,8 @@ class Film(FilmShort):
     Схемы ответов для:
     /api/v1/films/<uuid:UUID>/
     """
-    title: str
-    imdb_rating: float | None
     description: str | None
-    genres: list[Genres]
-    actors: list[IdName] | None
-    writers: list[IdName] | None
-    directors: list[IdName] | None
+    genres: list[Genres] | None = None
+    actors: list[IdName] | None = None
+    writers: list[IdName] | None = None
+    directors: list[IdName] | None = None

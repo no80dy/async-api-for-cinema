@@ -8,3 +8,9 @@ uvloop==0.17.0 ; sys_platform != "win32" and implementation_name == "cpython"
 requests==2.31.0
 gunicorn
 httptools
+
+
+pytest
+pytest-asyncio
+aiohttp
+pydantic_settings
