@@ -5,8 +5,6 @@ import pytest
 from unittest.mock import Mock, patch
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parents[3]))
-
 from ..settings import test_settings
 from ..testdata.es_data import es_films_data
 from ..testdata.response_data import (
@@ -16,6 +14,9 @@ from ..testdata.response_data import (
     FILMS_RESPONSE_DATA,
     FILMS_SHORT_RESPONSE_DATA
 )
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
 from services.film import (
     FilmService,
     CacheFilmHandler,
@@ -36,7 +37,7 @@ from services.film import (
         ),
         (
             {'film_id': str(uuid.uuid4())},
-            {'status': HTTP_404, 'body': { 'detail': 'films not found' } }
+            {'status': HTTP_404, 'body': {'detail': 'films not found'}}
         )
     ]
 )

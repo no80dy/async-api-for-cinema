@@ -80,17 +80,3 @@ def make_get_request(fastapi_session: aiohttp.ClientSession):
             }
             return response
     return inner
-
-
-@pytest_asyncio.fixture(scope='function')
-def redis_read_data(redis_client: Redis):
-    async def inner(key: str | bytes):
-        return await redis_client.get(key)
-    return inner
-
-
-@pytest_asyncio.fixture(scope='function')
-def redis_set_data(redis_client: Redis):
-    async def inner(key: str | bytes, value: Any):
-        return await redis_client.set(key, value)
-    return inner
