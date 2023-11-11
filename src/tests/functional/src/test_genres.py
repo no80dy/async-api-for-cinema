@@ -1,8 +1,10 @@
-from services.genre import (
-    GenreService,
-    CacheGenreHandler,
-    ElasticGenreHandler
-)
+import sys
+import uuid
+import pytest
+
+from unittest.mock import Mock, patch
+from pathlib import Path
+
 from ..testdata.response_data import (
     HTTP_200,
     HTTP_404,
@@ -11,15 +13,14 @@ from ..testdata.response_data import (
 )
 from ..testdata.es_data import es_genres_data
 from ..settings import test_settings
-import sys
-import uuid
-import pytest
-
-import asyncio
-from unittest.mock import Mock, patch
-from pathlib import Path
 
 sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from services.genre import (
+    GenreService,
+    CacheGenreHandler,
+    ElasticGenreHandler
+)
 
 
 @pytest.mark.parametrize(
@@ -108,10 +109,6 @@ async def test_get_all_genres(
     expected_genre_data
 ):
     await es_write_data(es_genres_data, index=test_settings.es_genres_index)
-
-    # Без этого костыля, данный тест иногда выполняется, обычно нет - видимо какая-то гонка, но как понять где?
-    # Кажется это связано с асинхронной загрузкой данных в эластик. Апи дергает элластик раньше. Почему?
-    await asyncio.sleep(1)
 
     response = await make_get_request('genres/', {})
 
