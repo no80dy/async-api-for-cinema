@@ -35,7 +35,7 @@ async def test_person(
 ):
     await es_write_data(es_persons_data, test_settings.es_persons_index)
 
-    response = await make_get_request(f"persons/{query_data.get('id')}")
+    response = await make_get_request(f"persons/{query_data.get('id')}", {})
 
     assert (
         response.get('status') == expected_answer.get('status')
@@ -70,7 +70,7 @@ async def test_person_negative(
     query_data,
     expected_answer
 ):
-    response = await make_get_request(f"persons/{query_data.get('id')}")
+    response = await make_get_request(f"persons/{query_data.get('id')}", {})
 
     assert response.get(
         'status') == expected_answer.get('status'), 'при несуществующих значениях, получен ответ отличный от 404'
@@ -105,9 +105,8 @@ async def test_person_films(
 
     # Без этого костыля, данный тест иногда выполняется, обычно нет - видимо какая-то гонка, но как понять где?
     # Кажется это связано с асинхронной загрузкой данных в эластик. Апи дергает элластик раньше. Почему?
-    await asyncio.sleep(1)
 
-    response = await make_get_request(f"persons/{query_data.get('id')}/film")
+    response = await make_get_request(f"persons/{query_data.get('id')}/film", {})
 
     assert (
         response.get('status') == expected_answer.get('status')
@@ -139,7 +138,7 @@ async def test_person_films_negative(
     query_data,
     expected_answer
 ):
-    response = await make_get_request(f"persons/{query_data.get('id')}/film")
+    response = await make_get_request(f"persons/{query_data.get('id')}/film", {})
 
     assert response.get(
         'status') == expected_answer.get('status'), 'при несуществующих значениях, получен ответ отличный от 404'
@@ -160,7 +159,7 @@ async def test_person_films_negative(
 )
 @pytest.mark.asyncio
 async def test_person_cach(
-    redis_get,
+    redis_client,
     es_write_data,
     make_get_request,
     query_data,
@@ -168,17 +167,17 @@ async def test_person_cach(
 ):
     """После запроса персоны по апи, идем в редис и ожидаем увидеть там запрошенную персону."""
     await es_write_data(person_cach_data, test_settings.es_persons_index)
-    await make_get_request(f"persons/{query_data.get('id')}")
+    await make_get_request(f"persons/{query_data.get('id')}", {})
 
     key = str(query_data.get('id'))
-    value = await redis_get(key)
+    value = await redis_client.get(key)
 
     assert json.loads(value) == expected_answer.get('body')
 
 
 @pytest.mark.asyncio
-async def test_person_cach(
-    redis_set,
+async def test_person_cache(
+    redis_client,
     make_get_request
 ):
     """Кладем в редис персону, которой точно нет в эластике. При запросе - ожидаем ответ из кеша."""
@@ -197,8 +196,8 @@ async def test_person_cach(
             {'uuid': value.get('films')[0].get('id'), 'roles': ['Writer']},
         ]
     }
-    await redis_set(key, json.dumps(value))
-    response = await make_get_request(f"persons/{key}")
+    await redis_client.set(key, json.dumps(value))
+    response = await make_get_request(f"persons/{key}", {})
 
     assert response.get('status') == HTTP_200
     assert response.get('body') == expected_value
@@ -224,7 +223,7 @@ async def test_person_cach(
 )
 @pytest.mark.asyncio
 async def test_person_films_cach(
-    redis_get,
+    redis_client,
     es_write_data,
     make_get_request,
     query_data,
@@ -234,9 +233,9 @@ async def test_person_films_cach(
     await es_write_data(es_films_data, test_settings.es_movies_index)
     await es_write_data(es_person_films_data, test_settings.es_persons_index)
 
-    await make_get_request(f"persons/{query_data.get('id')}/film")
+    await make_get_request(f"persons/{query_data.get('id')}/film", {})
 
     key = str(expected_answer.get('body').get('id'))
-    value = await redis_get(key)
+    value = await redis_client.get(key)
 
     assert json.loads(value) == expected_answer.get('body')

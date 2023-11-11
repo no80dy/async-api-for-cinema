@@ -173,7 +173,7 @@ async def test_get_films_by_genre_id_positive(
 ):
     await es_write_data(es_films_data, index=test_settings.es_movies_index)
 
-    genre_id  = film_data.get('genre_id')
+    genre_id = film_data.get('genre_id')
     response = await make_get_request('films/', {'genre_id': genre_id})
 
     assert (
@@ -206,7 +206,7 @@ async def test_get_films_by_genre_id_negative(
 ):
     await es_write_data(es_films_data, index=test_settings.es_movies_index)
 
-    genre_id  = film_data.get('genre_id')
+    genre_id = film_data.get('genre_id')
     response = await make_get_request('films/', { 'genre_id': genre_id, })
 
     assert (
