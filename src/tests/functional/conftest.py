@@ -3,6 +3,7 @@
 import aiohttp
 import pytest
 from elasticsearch import AsyncElasticsearch, Elasticsearch
+from redis.client import Redis
 
 from .settings import test_settings
 from .utils.helpers import get_es_bulk_query
@@ -25,6 +26,13 @@ def es_create_schema():
 @pytest.fixture(scope='session')  # Этот аргумент позволяет выполнить фикстуру перед всеми тестами и завершить после всех тестов
 def es_client():
     client = Elasticsearch(hosts=[f'{test_settings.es_host}:{test_settings.es_port}', ])
+    yield client
+    client.close()
+
+
+@pytest.fixture
+def redis_client():
+    client = Redis(host=test_settings.redis_host, port=test_settings.redis_port)
     yield client
     client.close()
 
@@ -54,7 +62,7 @@ def make_get_request(fastapi_session: aiohttp.ClientSession):  # TODO: разо�
         url = test_settings.service_url + f'/api/v1/{endpoint}'
         async for session in fastapi_session:
             response = await session.get(url, params=query_data)
-            body = await response.json()
+            body = await response.json() if response.headers['Content-type'] == 'application/json' else response.text()
             headers = response.headers
             status = response.status
 

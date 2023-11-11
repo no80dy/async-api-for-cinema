@@ -32,4 +32,4 @@ services:
     entrypoint: >
       sh -c "python3 /app/tests/functional/utils/wait_for_es.py
       && python3 /app/tests/functional/utils/wait_for_redis.py
-      && pytest -vv /app/tests/functional/src"
+      && pytest -vv -W ignore::DeprecationWarning /app/tests/functional/src"

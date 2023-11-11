@@ -33,9 +33,7 @@ async def search_persons(
         query, page_size, page_number
     )
     if not persons:
-        raise HTTPException(
-            status_code=HTTPStatus.NOT_FOUND, detail=DETAIL,
-        )
+        return []
 
     return [
         Person.model_validate_json(person.model_dump_json())

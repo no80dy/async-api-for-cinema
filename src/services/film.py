@@ -211,7 +211,7 @@ class FilmService:
             if not films:
                 return []
             value = json.dumps([film.model_dump_json() for film in films])
-            await self.cache_handler.put_film(value, key)
+            await self.cache_handler.put_film(key, value)
 
         return films
 
