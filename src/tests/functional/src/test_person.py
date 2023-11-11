@@ -89,17 +89,14 @@ async def test_person_negative(make_get_request, query_data, expected_answer):
 )
 @pytest.mark.asyncio
 async def test_person_films(es_write_data, make_get_request, query_data, expected_answer):
-    # Загружаем данные в ES
     await es_write_data(es_data, test_settings.es_movies_index)
     await es_write_data(es_person_films_data, test_settings.es_persons_index)
 
-    # Запрашиваем данные из ES
     # Без этого костыля, данный тест иногда выполняется, обычно нет - видимо какая-то гонка, но как понять где?
     await asyncio.sleep(1)
 
     response = await make_get_request(f"persons/{query_data.get('id')}/film")
 
-    # Проверяем ответ
     assert (
         response.get('status') == expected_answer.get('status')
     ), 'При позитивном сценарии поиска фильмов персоны, ответ отличается от 200'
@@ -134,8 +131,7 @@ async def test_person_films_negative(make_get_request, query_data, expected_answ
         'status') == expected_answer.get('status'), 'при невалидных значениях, получен ответ отличный от 422'
 
 
-# поиск с учётом кеша в Redis
-
+# Тестирование работы кеша
 
 @pytest.mark.parametrize(
     'query_data, expected_answer',
@@ -207,41 +203,9 @@ async def test_person_films_cach(redis_get, es_write_data, make_get_request, que
     await es_write_data(es_data, test_settings.es_movies_index)
     await es_write_data(es_person_films_data, test_settings.es_persons_index)
 
-    # asyncio.sleep(1)
-
     await make_get_request(f"persons/{query_data.get('id')}/film")
 
     key = str(expected_answer.get('body').get('id'))
     value = await redis_get(key)
 
     assert json.loads(value) == expected_answer.get('body')
-
-
-# @pytest.mark.parametrize(
-#     'query_data, expected_answer',
-#     [
-#         (
-#             {'id': es_person_films_data[0].get('id')},
-#             {'body': [{'id': es_data[0].get('id'),
-#                       'title': es_data[0].get('id'),
-#                        'imdb_rating': es_data[0].get('id')
-#                        },
-#                       ]
-#              }
-#         ),
-#     ]
-# )
-# @pytest.mark.asyncio
-# async def test_person_cach(redis_set, es_write_data, make_get_request, query_data, expected_answer):
-#     """Кладем в редис список фильмов персоны, которой точно нет в эластике. При запросе - ожидаем ответ из кеша."""
-#     await es_write_data(es_person_films_data, test_settings.es_persons_index)
-
-#     films_id = [film.get('id') for film in expected_answer.get('body')]
-#     key = '/'.join(films_id)
-#     value = str(expected_answer.get('body'))
-
-#     await redis_set(key, value)
-#     response = await make_get_request(f"persons/{query_data.get('id')}/film")
-
-#     assert response.get('status') == HTTP_200
-#     assert response.get('body') == expected_answer.get('body')
