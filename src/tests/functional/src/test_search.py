@@ -1,16 +1,9 @@
 import json
-
 import pytest
-from redis.asyncio import Redis
 
 from ..settings import test_settings
 from ..testdata.es_data import es_films_data, es_persons_data
-
-HTTP_200 = 200
-HTTP_422 = 422
-
-#  Название теста должно начинаться со слова `test_`
-#  Любой тест с асинхронными вызовами нужно оборачивать декоратором `pytest.mark.asyncio`, который следит за запуском и работой цикла событий.
+from ..testdata.response_data import HTTP_200, HTTP_422
 
 
 @pytest.mark.parametrize(
@@ -151,7 +144,13 @@ HTTP_422 = 422
 )
 @pytest.mark.asyncio
 async def test_search_films_positive(
-        make_get_request, es_write_data, query_data, expected_answer, endpoint, data, index
+    make_get_request,
+    es_write_data,
+    query_data,
+    expected_answer,
+    endpoint,
+    data,
+    index
 ):
     # Загружаем данные в ES
     await es_write_data(data, index)
@@ -242,7 +241,13 @@ async def test_search_films_positive(
     ]
 )
 @pytest.mark.asyncio
-async def test_search_films_negative(make_get_request, es_write_data, query_data, expected_http_code, endpoint):
+async def test_search_films_negative(
+    make_get_request,
+    es_write_data,
+    query_data,
+    expected_http_code,
+    endpoint
+):
     # Загружаем данные в ES
     await es_write_data(es_films_data, test_settings.es_movies_index)
 
@@ -276,7 +281,14 @@ async def test_search_films_negative(make_get_request, es_write_data, query_data
 )
 @pytest.mark.asyncio
 async def test_search_with_cache(
-        redis_client, make_get_request, es_write_data, query_data, expected_answer, endpoint, data, index
+    redis_client,
+    make_get_request,
+    es_write_data,
+    query_data,
+    expected_answer,
+    endpoint,
+    data,
+    index
 ):
     key_string = f'{query_data.get("query")}/{query_data.get("page_size")}/{query_data.get("page_number")}'
     key = bytes(key_string, 'utf-8')
@@ -285,10 +297,10 @@ async def test_search_with_cache(
     await make_get_request(endpoint, query_data)
 
     value = await redis_client.get(key)
-    str1 = value.decode("UTF-8")
+    str1 = value.decode('UTF-8')
     dict_str = json.loads(str1)
     list_of_dicts = [json.loads(s) for s in dict_str]
 
     assert (
-        list_of_dicts == data[:query_data.get("page_size")]
+        list_of_dicts == data[:query_data.get('page_size')]
     ), 'В кэше значения после вызова эндпоинта search не соответствуют ожидаемым'

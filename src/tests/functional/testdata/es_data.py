@@ -1,5 +1,4 @@
 import uuid
-import datetime
 
 
 DATA_ROWS = 50
@@ -53,7 +52,7 @@ es_person_films_data = [{
 }]
 
 
-person_cach_data = [{
+person_cache_data = [{
     'id': str(uuid.uuid4()),
     'full_name': 'John',
     'films': [

@@ -5,8 +5,6 @@ import pytest
 from unittest.mock import Mock, patch
 from pathlib import Path
 
-sys.path.append(str(Path(__file__).resolve().parents[3]))
-
 from ..settings import test_settings
 from ..testdata.es_data import es_films_data
 from ..testdata.response_data import (
@@ -16,6 +14,9 @@ from ..testdata.response_data import (
     FILMS_RESPONSE_DATA,
     FILMS_SHORT_RESPONSE_DATA
 )
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
 from services.film import (
     FilmService,
     CacheFilmHandler,
@@ -36,7 +37,7 @@ from services.film import (
         ),
         (
             {'film_id': str(uuid.uuid4())},
-            {'status': HTTP_404, 'body': { 'detail': 'films not found' } }
+            {'status': HTTP_404, 'body': {'detail': 'films not found'}}
         )
     ]
 )
@@ -173,7 +174,7 @@ async def test_get_films_by_genre_id_positive(
 ):
     await es_write_data(es_films_data, index=test_settings.es_movies_index)
 
-    genre_id  = film_data.get('genre_id')
+    genre_id = film_data.get('genre_id')
     response = await make_get_request('films/', {'genre_id': genre_id})
 
     assert (
@@ -206,7 +207,7 @@ async def test_get_films_by_genre_id_negative(
 ):
     await es_write_data(es_films_data, index=test_settings.es_movies_index)
 
-    genre_id  = film_data.get('genre_id')
+    genre_id = film_data.get('genre_id')
     response = await make_get_request('films/', { 'genre_id': genre_id, })
 
     assert (
