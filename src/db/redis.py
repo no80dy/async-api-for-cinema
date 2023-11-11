@@ -9,7 +9,7 @@ class ICache(ABC):
         pass
 
     @abstractmethod
-    async def set(self, value: Any, key: str, expired_time: int) -> None:
+    async def set(self, key: str, value: Any, expired_time: int) -> None:
         pass
 
     @abstractmethod
@@ -24,7 +24,7 @@ class RedisCache(ICache):
     async def get(self, key: str) -> str | None:
         return await self.connection.get(key)
 
-    async def set(self, value: Any, key: str, expired_time: int) -> None:
+    async def set(self, key: str, value: Any, expired_time: int) -> None:
         await self.connection.set(key, value, expired_time)
 
     async def close(self):
