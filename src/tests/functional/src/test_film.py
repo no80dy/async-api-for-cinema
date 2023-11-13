@@ -41,7 +41,6 @@ from services.film import (
         )
     ]
 )
-@pytest.mark.asyncio
 async def test_search_film_by_film_id_positive(
     make_get_request,
     es_write_data,
@@ -74,7 +73,6 @@ async def test_search_film_by_film_id_positive(
         )
     ]
 )
-@pytest.mark.asyncio
 async def test_search_film_by_film_id_negative(
     make_get_request,
     es_write_data,
@@ -104,7 +102,6 @@ async def test_search_film_by_film_id_negative(
         )
     ]
 )
-@pytest.mark.asyncio
 async def test_films_pagination_positive(
     make_get_request,
     es_write_data,
@@ -136,7 +133,6 @@ async def test_films_pagination_positive(
         )
     ]
 )
-@pytest.mark.asyncio
 async def test_films_pagination_negative(
     make_get_request,
     es_write_data,
@@ -165,7 +161,6 @@ async def test_films_pagination_negative(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_get_films_by_genre_id_positive(
     make_get_request,
     es_write_data,
@@ -198,7 +193,6 @@ async def test_get_films_by_genre_id_positive(
         )
     ]
 )
-@pytest.mark.asyncio
 async def test_get_films_by_genre_id_negative(
     make_get_request,
     es_write_data,
@@ -215,7 +209,6 @@ async def test_get_films_by_genre_id_negative(
     ), 'При передаче невалидных данных ответ должен быть равным HTTP_422'
 
 
-@pytest.mark.asyncio
 async def test_get_film_from_cache():
     storage_handler_mock = Mock(spec=ElasticFilmHandler)
     cache_handler_mock = Mock(spec=CacheFilmHandler)

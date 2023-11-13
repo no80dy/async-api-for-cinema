@@ -19,7 +19,6 @@ from ..testdata.response_data import HTTP_200, HTTP_404, HTTP_422
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_person(
     es_write_data,
     make_get_request,
@@ -57,7 +56,6 @@ async def test_person(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_person_negative(
     make_get_request,
     query_data,
@@ -86,7 +84,6 @@ async def test_person_negative(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_person_films(
     es_write_data,
     make_get_request,
@@ -122,7 +119,6 @@ async def test_person_films(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_person_films_negative(
     make_get_request,
     query_data,
@@ -147,7 +143,6 @@ async def test_person_films_negative(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_person_cach(
     redis_client,
     es_write_data,
@@ -165,7 +160,6 @@ async def test_person_cach(
     assert json.loads(value) == expected_answer.get('body')
 
 
-@pytest.mark.asyncio
 async def test_person_cache(
     redis_client,
     make_get_request
@@ -211,7 +205,6 @@ async def test_person_cache(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_person_films_cache(
     redis_client,
     es_write_data,
