@@ -142,7 +142,6 @@ from ..testdata.response_data import HTTP_200, HTTP_422
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_search_films_positive(
     make_get_request,
     es_write_data,
@@ -240,7 +239,6 @@ async def test_search_films_positive(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_search_films_negative(
     make_get_request,
     es_write_data,
@@ -279,7 +277,6 @@ async def test_search_films_negative(
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_search_with_cache(
     redis_client,
     make_get_request,

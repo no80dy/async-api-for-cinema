@@ -1,4 +1,6 @@
 # настройки для тестов
+import logging
+
 from pydantic_settings import BaseSettings
 
 from .testdata.es_mapping import es_shema_movies, es_shema_persons, es_shema_genres

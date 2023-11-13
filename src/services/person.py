@@ -3,11 +3,12 @@ import uuid
 
 from functools import lru_cache
 from typing import Any
+from abc import ABC, abstractmethod
 from fastapi import Depends
 
 from db.storage import get_elastic
 from db.cache import get_cache
-from db.elastic import ElasticStorage
+from db.elastic import ElasticStorage, IStorage
 from db.redis import ICache
 from models.person import Person
 from core.config import settings
@@ -40,11 +41,32 @@ class CachePersonHandler:
         await self.cache.set(key, value, self.expired_time)
 
 
-class ElasticPersonHandler:
+class StoragePersonHandler(ABC):
+    def __init__(self, storage: IStorage) -> None:
+        self.storage = storage
+
+    @abstractmethod
+    async def get_person_by_id(
+        self,
+        person_id: uuid.UUID
+    ) -> Person | None:
+        pass
+
+    @abstractmethod
+    async def get_persons_by_query(
+        self,
+        query: str,
+        page_size: int,
+        page_number: int
+    ) -> list[Person] | None:
+        pass
+
+
+class ElasticPersonHandler(StoragePersonHandler):
     """Класс ElasticPersonHandler отвечает за работу с эластиком по информации о персонах."""
 
     def __init__(self, storage: ElasticStorage) -> None:
-        self.storage = storage
+        super().__init__(storage)
 
     async def get_person_by_id(
         self,

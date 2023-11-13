@@ -9,12 +9,13 @@ class IStorage(ABC):
         pass
 
     @abstractmethod
-    async def search(self, index: str, body: str) -> list[dict] | None:
+    async def search(self, index: str, body: Any) -> list[dict] | None:
         pass
 
     @abstractmethod
     async def close(self):
         pass
+
 
 class ElasticStorage(IStorage):
     def __init__(self, **kwargs) -> None:
