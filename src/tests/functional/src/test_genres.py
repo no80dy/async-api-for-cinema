@@ -40,7 +40,6 @@ from services.genre import (
         ),
     ]
 )
-@pytest.mark.asyncio
 async def test_get_genre_by_id_positive(
     make_get_request,
     es_write_data,
@@ -77,7 +76,6 @@ async def test_get_genre_by_id_positive(
         )
     ]
 )
-@pytest.mark.asyncio
 async def test_get_genre_by_genre_id_negative(
     make_get_request,
     es_write_data,
@@ -102,7 +100,6 @@ async def test_get_genre_by_genre_id_negative(
         )
     ]
 )
-@pytest.mark.asyncio
 async def test_get_all_genres(
     make_get_request,
     es_write_data,
@@ -120,7 +117,6 @@ async def test_get_all_genres(
     ), 'Количество фильмов в ответе должно быть равно количеству ожидаемых'
 
 
-@pytest.mark.asyncio
 async def test_get_film_from_cache(
     make_get_request,
     es_write_data
