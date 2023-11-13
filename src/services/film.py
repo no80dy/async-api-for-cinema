@@ -2,13 +2,14 @@ import json
 import uuid
 from functools import lru_cache
 from typing import Any
+from abc import ABC, abstractmethod
 
 from fastapi import Depends
 
 from db.cache import get_cache
 from db.redis import ICache
 from db.storage import get_elastic
-from db.elastic import ElasticStorage
+from db.elastic import ElasticStorage, IStorage
 from models.film import Film
 from models.person import Person
 from core.config import settings
@@ -27,6 +28,56 @@ def get_sort_field(sort: str) -> str:
 
 def get_sort_order(sort: str) -> str:
     return 'desc' if sort.startswith('-') else 'asc'
+
+
+class StorageFilmHandler(ABC):
+    def __init__(
+        self,
+        storage: IStorage
+    ) -> None:
+        self.storage = storage
+
+    @abstractmethod
+    async def get_film_by_id(
+        self,
+        film_id: uuid.UUID
+    ) -> Film | None:
+        pass
+
+    @abstractmethod
+    async def get_films_by_query(
+        self,
+        query: str,
+        page_size: int,
+        page_number: int
+    ) -> list[Film] | None:
+        pass
+
+    @abstractmethod
+    async def get_films_with_sort(
+        self,
+        sort: str,
+        page_size: int,
+        page_number: int
+    ) -> list[Film] | None:
+        pass
+
+    @abstractmethod
+    async def get_films_by_genre_id_with_sort(
+        self,
+        genre_id: uuid.UUID,
+        sort: str,
+        page_size: int,
+        page_number: int
+    ) -> list[Film] | None:
+        pass
+
+    @abstractmethod
+    async def get_films_by_ids(
+        self,
+        film_ids: list[str]
+    ) -> list[Film] | None:
+        pass
 
 
 class CacheFilmHandler:
@@ -49,11 +100,11 @@ class CacheFilmHandler:
         await self.cache.set(key, value, self.expired_time)
 
 
-class ElasticFilmHandler:
+class ElasticFilmHandler(StorageFilmHandler):
     """Класс ElasticFilmHandler отвечает за работу с эластиком по информации о фильмах."""
 
     def __init__(self, storage: ElasticStorage) -> None:
-        self.storage = storage
+        super().__init__(storage)
 
     async def get_film_by_id(
         self,

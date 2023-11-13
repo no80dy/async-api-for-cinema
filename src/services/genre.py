@@ -2,18 +2,32 @@ import json
 import uuid
 from functools import lru_cache
 from typing import Any
+from abc import ABC, abstractmethod
 
 from fastapi import Depends
 
 from db.cache import get_cache
 from db.redis import ICache
 from db.storage import get_elastic
-from db.elastic import ElasticStorage
+from db.elastic import ElasticStorage, IStorage
 from models.genre import Genres
 from core.config import settings
 
 
 GENRE_CACHE_EXPIRE_IN_SECONDS = 5 * 60  # 5 min
+
+
+class StorageGenreHandler(ABC):
+    def __init__(self, storage: IStorage):
+        self.storage = storage
+
+    @abstractmethod
+    async def get_genre_by_id(self, genre_id: uuid.UUID) -> Genres | None:
+        pass
+
+    @abstractmethod
+    async def get_genres(self) -> list[Genres] | None:
+        pass
 
 
 class CacheGenreHandler:
@@ -36,11 +50,11 @@ class CacheGenreHandler:
         await self.cache.set(value, key, self.expired_time)
 
 
-class ElasticGenreHandler:
+class ElasticGenreHandler(StorageGenreHandler):
     """Класс ElasticGenreHandler отвечает за работу с эластиком по информации о жанрах."""
 
     def __init__(self, storage: ElasticStorage) -> None:
-        self.storage = storage
+        super().__init__(storage)
 
     async def get_genre_by_id(
         self,

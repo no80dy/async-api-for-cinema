@@ -1,9 +1,14 @@
 import time
-
+import sys
 import backoff
 import requests
 
+from pathlib import Path
 from elasticsearch import Elasticsearch
+
+sys.path.append(str(Path(__file__).resolve().parents[3]))
+
+from tests.functional.logger import logger
 
 
 HOST = 'elastic'
@@ -19,7 +24,7 @@ if __name__ == '__main__':
     def check_es_readiness():
         while True:
             if es_client.ping():
-                print('Elasticsearch ping Ok')
+                logger.info('Elasticsearch ping Ok')
                 break
             time.sleep(1)
 
